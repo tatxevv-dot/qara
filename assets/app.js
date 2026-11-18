@@ -1,4 +1,4 @@
-/* one — football analytics. Vanilla JS + Supabase (read-only, RLS). */
+/* qara — football analytics. Vanilla JS + Supabase (read-only, RLS). */
 const SUPABASE_URL = "https://pvocjvvzkvzhckilhokx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_amz1rV3zMWOZqazzODCDTw_MzIYN6pZ";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }); /* data client: always anon, so RLS for "authenticated" never hides matches/leagues/players */
@@ -326,7 +326,7 @@ async function homeRight() {
   const since = new Date(Date.now() - 7 * 86400000).toISOString();
   run(sb.from("player_match_stats").select("rating,goals,assists,player_id,player:players(name),team:teams(name,short_name,crest_url),m:matches!inner(utc_date,competition_id)").gte("m.utc_date", since).not("rating", "is", null).order("rating", { ascending: false }).limit(6)).then((rows) => {
     const box = $("#potw"); if (!box) return;
-    box.innerHTML = `<div class="card-h">Лучшие игроки недели<span class="more muted">one рейтинг</span></div>` + (rows.length ? rows.map((r) => `<a class="lead" href="#/player/${r.player_id}">${avatar(r.player_id, r.player?.name)}<div class="who"><div>${esc(r.player?.name)}</div><small>${esc([r.team?.short_name || r.team?.name, COMP[r.m.competition_id]?.short, r.goals ? r.goals + " г" : "", r.assists ? r.assists + " а" : ""].filter(Boolean).join(" · "))}</small></div>${ratingChip(r.rating)}</a>`).join("") + `<div style="height:8px"></div>` : `<div class="empty-note">Нет сыгранных матчей за 7 дней.</div>`);
+    box.innerHTML = `<div class="card-h">Лучшие игроки недели<span class="more muted">qara рейтинг</span></div>` + (rows.length ? rows.map((r) => `<a class="lead" href="#/player/${r.player_id}">${avatar(r.player_id, r.player?.name)}<div class="who"><div>${esc(r.player?.name)}</div><small>${esc([r.team?.short_name || r.team?.name, COMP[r.m.competition_id]?.short, r.goals ? r.goals + " г" : "", r.assists ? r.assists + " а" : ""].filter(Boolean).join(" · "))}</small></div>${ratingChip(r.rating)}</a>`).join("") + `<div style="height:8px"></div>` : `<div class="empty-note">Нет сыгранных матчей за 7 дней.</div>`);
   });
   run(sb.from("v_player_season").select("player_id,name,team_short,crest_url,xg,goals,competition_id").order("xg", { ascending: false }).limit(6)).then((rows) => {
     const box = $("#xgLead"); if (!box) return;
@@ -363,7 +363,7 @@ async function leagueOverview(id, box) {
       ${live.length ? `<div class="card"><div class="card-h"><span class="live-dot"></span> Сейчас в эфире</div>${live.map((m) => matchRow(m)).join("")}<div style="height:8px"></div></div>` : ""}
       <div class="card"><div class="card-h">Таблица<a class="more" href="#/league/${id}/table">Подробно</a></div>${standingsTable(st, null, { compact: true })}</div>
       <div class="section-gap"></div>
-      <div class="leaders-grid">${leaders("goals", "Голы")}${leaders("assists", "Ассисты")}${leaders("xg", "Ожидаемые голы (xG)", 2)}${leaders("rating", "one рейтинг", 2, (r) => r.minutes >= Math.max(180, fin.length / Math.max(1, st.length) * 2 * 45))}</div>
+      <div class="leaders-grid">${leaders("goals", "Голы")}${leaders("assists", "Ассисты")}${leaders("xg", "Ожидаемые голы (xG)", 2)}${leaders("rating", "qara рейтинг", 2, (r) => r.minutes >= Math.max(180, fin.length / Math.max(1, st.length) * 2 * 45))}</div>
     </main>
     <aside class="side">
       <div class="card"><div class="card-h">Ближайшие матчи<a class="more" href="#/league/${id}/matches">Все</a></div>${upcoming.map((m) => matchRow(m, { showDate: true })).join("") || `<div class="empty-note">Нет запланированных матчей.</div>`}<div style="height:8px"></div></div>
@@ -664,8 +664,8 @@ async function viewPlayer(id) {
 }
 function pctMetrics(g) {
   const per = (k) => (r) => p90(+r[k], r.minutes);
-  const base = [["Голы /90", per("goals"), 2], ["xG /90", per("xg"), 2], ["Удары /90", per("shots"), 2], ["В створ /90", per("shots_on_target"), 2], ["Ассисты /90", per("assists"), 2], ["xA /90", per("xa"), 2], ["xG+xA /90", (r) => p90(+r.xg + +r.xa, r.minutes), 2], ["Точность ударов, %", (r) => (r.shots ? r.shots_on_target / r.shots * 100 : 0), 0], ["Фолы на нём /90", per("fouls_won"), 2], ["Фолы /90 (инв.)", (r) => -p90(+r.fouls, r.minutes), 2], ["one рейтинг", (r) => +r.rating || 0, 2]];
-  if (g === "GK") return [["Сейвы /90", per("saves"), 2], ["Пропущено /90 (инв.)", (r) => -p90(r.conceded, r.minutes), 2], ["% отражённых", (r) => (r.shots_faced ? (r.saves / r.shots_faced) * 100 : 0), 0], ["one рейтинг", (r) => +r.rating || 0, 2]];
+  const base = [["Голы /90", per("goals"), 2], ["xG /90", per("xg"), 2], ["Удары /90", per("shots"), 2], ["В створ /90", per("shots_on_target"), 2], ["Ассисты /90", per("assists"), 2], ["xA /90", per("xa"), 2], ["xG+xA /90", (r) => p90(+r.xg + +r.xa, r.minutes), 2], ["Точность ударов, %", (r) => (r.shots ? r.shots_on_target / r.shots * 100 : 0), 0], ["Фолы на нём /90", per("fouls_won"), 2], ["Фолы /90 (инв.)", (r) => -p90(+r.fouls, r.minutes), 2], ["qara рейтинг", (r) => +r.rating || 0, 2]];
+  if (g === "GK") return [["Сейвы /90", per("saves"), 2], ["Пропущено /90 (инв.)", (r) => -p90(r.conceded, r.minutes), 2], ["% отражённых", (r) => (r.shots_faced ? (r.saves / r.shots_faced) * 100 : 0), 0], ["qara рейтинг", (r) => +r.rating || 0, 2]];
   return base;
 }
 
@@ -992,7 +992,7 @@ async function viewStats(c, sKey) {
     { k: "fin", t: "Реализация: голы − xG", f: (r) => r.goals - r.xg, d: 2 },
     { k: "shots", t: "Удары", f: (r) => r.shots },
     { k: "sot", t: "Удары в створ", f: (r) => r.shots_on_target },
-    { k: "rating", t: "one рейтинг", f: (r) => +r.rating || 0, d: 2, filt: m90 },
+    { k: "rating", t: "qara рейтинг", f: (r) => +r.rating || 0, d: 2, filt: m90 },
     { k: "g90", t: "Голы за 90", f: (r) => p90(r.goals, r.minutes), d: 2, filt: m90 },
     { k: "xg90", t: "xG за 90", f: (r) => p90(+r.xg, r.minutes), d: 2, filt: m90 },
     { k: "yc", t: "Жёлтые карточки", f: (r) => r.yellow },
