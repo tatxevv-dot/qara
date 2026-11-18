@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /#/admin
-
-Sitemap: https://tatxevv-dot.github.io/qara/sitemap.xml
