@@ -1,0 +1,53 @@
+/* Zone — custom player skin */
+.zp{position:relative;background:#000;aspect-ratio:16/9;overflow:hidden;border-radius:inherit;-webkit-tap-highlight-color:transparent;user-select:none}
+.zp video{width:100%;height:100%;display:block;object-fit:contain;background:#000}
+.zp-ui{position:absolute;inset:0;color:#fff;font:500 12px/1 -apple-system,system-ui,sans-serif}
+/* :where() => нулевая специфичность, не перебивает размеры кнопок */
+:where(.zp-ui button){all:unset;cursor:pointer;box-sizing:border-box}
+.zp-ui svg{display:block;flex:none}
+
+/* центральная кнопка */
+.zp-big{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;padding:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(20,20,22,.5);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 0 0 1px rgba(255,255,255,.12) inset;opacity:0;transform:scale(.9);transition:.2s;pointer-events:none}
+.zp-big svg{width:100%;height:100%;padding-left:1px}
+.zp.paused .zp-big{opacity:1;transform:none;pointer-events:auto}
+.zp.buf .zp-big{opacity:0}
+
+/* буферизация */
+.zp-spin{position:absolute;left:50%;top:50%;width:28px;height:28px;margin:-14px 0 0 -14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;opacity:0;animation:zpsp .8s linear infinite;pointer-events:none;transition:opacity .2s}
+.zp.buf .zp-spin{opacity:1}
+@keyframes zpsp{to{transform:rotate(360deg)}}
+
+/* нижняя панель */
+.zp-bar{position:absolute;left:0;right:0;bottom:0;padding:26px 8px 5px;background:linear-gradient(to top,rgba(0,0,0,.6),transparent);opacity:0;transform:translateY(4px);transition:.22s;pointer-events:none}
+.zp.show .zp-bar{opacity:1;transform:none;pointer-events:auto}
+.zp-prog{height:2px;margin:0 3px 3px;border-radius:2px;background:rgba(255,255,255,.25);overflow:hidden;position:relative}
+.zp-prog::before{content:"";position:absolute;left:0;right:0;top:-8px;bottom:-8px}
+.zp-prog i{display:block;height:100%;width:0;background:var(--accent,#0a6cff)}
+.zp-row{display:flex;align-items:center;gap:2px}
+.zp-sp{flex:1}
+.zp-b{height:28px;min-width:28px;padding:5px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;gap:4px;opacity:.92}
+.zp-b svg{width:18px;height:18px}
+.zp-b:active{background:rgba(255,255,255,.16)}
+.zp-q{padding:5px 7px}
+.zp-q svg{width:16px;height:16px}
+.zp-q em{font-style:normal;font-size:11px;font-weight:600;white-space:nowrap;opacity:.9}
+.zp-fs svg{width:16px;height:16px}
+.zp-time{font-size:11px;opacity:.8;margin-left:6px;font-variant-numeric:tabular-nums}
+
+/* LIVE */
+.zp-live{display:inline-flex;align-items:center;gap:5px;margin-left:2px;padding:4px 8px;border-radius:6px;background:rgba(255,59,48,.9);font-size:10px;font-weight:700;letter-spacing:.07em}
+.zp-live span{width:5px;height:5px;border-radius:50%;background:#fff}
+.zp-live.off{background:rgba(255,255,255,.18)}
+.zp-live.off span{background:#ff3b30}
+
+/* меню качества */
+.zp-menu{position:absolute;right:8px;bottom:44px;min-width:130px;padding:4px;border-radius:12px;background:rgba(28,28,30,.92);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 6px 24px rgba(0,0,0,.45);max-height:70%;overflow:auto}
+.zp-menu[hidden]{display:none}
+.zp-mh{padding:6px 10px 4px;font-size:10px;opacity:.55;text-transform:uppercase;letter-spacing:.07em}
+.zp-menu button{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;padding:8px 10px;border-radius:8px;font-size:13px}
+.zp-menu button:active{background:rgba(255,255,255,.14)}
+.zp-menu button b{opacity:0;color:var(--accent,#0a6cff)}
+.zp-menu button.on b{opacity:1}
+
+@media (hover:hover){.zp-b:hover{background:rgba(255,255,255,.14)}}
+@media (max-width:520px){.zp-time{display:none}}
