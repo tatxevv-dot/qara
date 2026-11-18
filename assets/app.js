@@ -5,13 +5,13 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { pe
 const sbAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: "zone-auth" } });
 
 const COMPS = [
-  { id: "PL", name: "Premier League", short: "АПЛ", country: "Англия", logo: "https://a.espncdn.com/i/leaguelogos/soccer/500/23.png" },
+  { id: "PL", name: "Premier League", short: "АПЛ", country: "Англия", logo: "assets/logos/pl.svg" },
   { id: "PD", name: "LaLiga", short: "Ла Лига", country: "Испания", logo: "https://a.espncdn.com/i/leaguelogos/soccer/500/15.png" },
-  { id: "SA", name: "Serie A", short: "Серия А", country: "Италия", logo: "https://a.espncdn.com/i/leaguelogos/soccer/500/12.png" },
-  { id: "BL1", name: "Bundesliga", short: "Бундеслига", country: "Германия", logo: "https://a.espncdn.com/i/leaguelogos/soccer/500/10.png" },
-  { id: "FL1", name: "Ligue 1", short: "Лига 1", country: "Франция", logo: "https://a.espncdn.com/i/leaguelogos/soccer/500/9.png" },
-  { id: "CL", name: "Champions League", short: "ЛЧ", country: "Европа", logo: "https://a.espncdn.com/i/leaguelogos/soccer/500/2.png" },
-  { id: "NL", name: "Nations League", short: "ЛН", country: "Европа", logo: "data:image/svg+xml;utf8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%231b4fd8%27/%3E%3Cpath d=%27M32 12l6 12 13 2-9.500 9 2.500 13L32 41l-12 7 2.500-13L13 26l13-2z%27 fill=%27%23fff%27/%3E%3C/svg%3E" },
+  { id: "SA", name: "Serie A", short: "Серия А", country: "Италия", logo: "assets/logos/sa.svg" },
+  { id: "BL1", name: "Bundesliga", short: "Бундеслига", country: "Германия", logo: "assets/logos/bl.svg" },
+  { id: "FL1", name: "Ligue 1", short: "Лига 1", country: "Франция", logo: "assets/logos/fl.svg" },
+  { id: "CL", name: "Champions League", short: "ЛЧ", country: "Европа", logo: "assets/logos/cl.svg" },
+  { id: "NL", name: "Nations League", short: "ЛН", country: "Европа", logo: "assets/logos/nl.svg" },
 ];
 const CUP_IDS = new Set(["CL", "NL"]);
 const COMP = new Proxy(Object.fromEntries(COMPS.map((c) => [c.id, c])), { get: (t, k) => t[k] || (typeof k === "string" && k !== "then" ? { id: k, name: k, short: k, country: "", logo: "" } : undefined) }); /* unknown competition ids never crash views */
@@ -280,7 +280,7 @@ async function viewHome(params) {
     if (state.filter === "live") list = list.filter((m) => m.status === "LIVE" || m.status === "PAUSED");
     if (state.filter === "fav") { const ft = new Set(favTeams().map((t) => t.id)), fm = new Set(favMatches()); list = list.filter((m) => fm.has(m.id) || ft.has(m.home_team_id) || ft.has(m.away_team_id)); }
     const body = $("#feedBody"); if (!body) return;
-    if (!list.length) { body.innerHTML = `<div class="empty-note" style="padding:28px 18px;text-align:center">${state.filter === "live" ? "Сейчас нет матчей в прямом эфире." : state.filter === "fav" ? "Нет матчей избранных команд в этот день." : "В этот день нет матчей топ-5 лиг, Лиги чемпионов и Лиги наций."}<div id="nearBtns" style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap"></div></div>`; if (state.filter === "all") nearDays(); return; }
+    if (!list.length) { body.innerHTML = `<div class="empty-note" style="padding:28px 18px;text-align:center">${state.filter === "live" ? "Сейчас нет матчей в прямом эфире." : state.filter === "fav" ? "Нет матчей избранных команд в этот день." : "В этот день нет матчей"}<div id="nearBtns" style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap"></div></div>`; if (state.filter === "all") nearDays(); return; }
     if (state.sort === "time") { body.innerHTML = `<div class="comp-group">${list.map((m) => matchRow(m)).join("")}</div>`; return; }
     body.innerHTML = COMPS.map((c) => {
       const ms = list.filter((m) => m.competition_id === c.id); if (!ms.length) return "";
