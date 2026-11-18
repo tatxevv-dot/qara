@@ -72,7 +72,19 @@ async function fetchAll(make, page = 1000) {
   for (;;) { const rows = await run(make().range(from, from + page - 1)); out = out.concat(rows); if (rows.length < page) break; from += page; }
   return out;
 }
-const getStandings = (c) => q("st:" + c, () => run(sb.from("standings").select(`*,team:teams(${TEAM_SEL})`).eq("competition_id", c).order("position")));
+/* Nations League: ESPN sends qualification notes for one group only, so every group gets them by rule (league letter in the group name + position). */
+const NL_RULES = {
+  1: ["#81D6AC", "1 место: четвертьфинал (дивизион A) · повышение (B–D)"],
+  2: ["#B5E7CE", "2 место: четвертьфинал (A) · стыки за повышение (B–D)"],
+  3: ["#FEB4B5", "3 место: стыки за сохранение места (A, B)"],
+  4: ["#FF7F84", "4 место: вылет (A, B) · вылет или стыки (C)"],
+};
+const nlNotes = (rows) => rows.map((r) => {
+  const lg = (/Group\s*([A-D])/i.exec(r.group_name || "") || [])[1]?.toUpperCase(), rule = NL_RULES[r.position];
+  if (!lg || !rule || (r.position >= 3 && lg === "D") || (r.position === 3 && lg === "C")) return { ...r, note: null, note_color: null };
+  return { ...r, note: rule[1], note_color: rule[0] };
+});
+const getStandings = (c) => q("st:" + c, async () => { const rows = await run(sb.from("standings").select(`*,team:teams(${TEAM_SEL})`).eq("competition_id", c).order("position")); return c === "NL" ? nlNotes(rows) : rows; });
 const getCompMatches = (c) => q("cm:" + c, () => fetchAll(() => sb.from("matches").select(M_SEL).eq("competition_id", c).order("utc_date")));
 const getTeamStatsComp = (c) => q("tsc:" + c, () => fetchAll(() => sb.from("team_match_stats").select("match_id,team_id,xg,xga,possession,shots,shots_on_target,matches!inner(competition_id,status)").eq("matches.competition_id", c)));
 const getPlayerSeason = (c) => q("ps:" + c, () => fetchAll(() => { let b = sb.from("v_player_season").select("*"); if (c) b = b.eq("competition_id", c); return b.order("minutes", { ascending: false }); }));
@@ -325,7 +337,7 @@ async function homeRight() {
         return gs.slice(0, MAX).map((g) => `<tr class="grp-row"><td colspan="5" style="text-align:left;padding:12px 16px 6px;font-size:12px;font-weight:700;color:var(--text-3);letter-spacing:.02em;background:var(--bg-sunk)">${esc(g)}</td></tr>` + st.filter((r) => (r.group_name || "") === g).sort((a, b) => a.position - b.position).map(row).join("")).join("")
           + (gs.length > MAX ? `<tr class="grp-row"><td colspan="5" style="padding:12px 16px;text-align:center"><a class="more" href="#/league/${cur}/table">Ещё групп: ${gs.length - MAX} — смотреть все</a></td></tr>` : "");
       })()}
-      </tbody></table><div style="height:8px"></div>`;
+      </tbody></table>${(() => { const shown = (() => { const gs = [...new Set(st.map((r) => r.group_name || ""))].sort((a, b) => a.localeCompare(b, "en", { numeric: true })); return gs.length < 2 ? st.slice(0, CUP_IDS.has(cur) ? 12 : 10) : st.filter((r) => gs.slice(0, 4).includes(r.group_name || "")); })(); const nt = [...new Map(shown.filter((r) => r.note).map((r) => [r.note, r.note_color])).entries()]; return nt.length ? `<div class="legend" style="padding:12px 16px 14px">${nt.map(([n, col]) => `<span><i style="background:${col}"></i>${esc(noteRu(n))}</span>`).join("")}</div>` : ""; })()}<div style="height:8px"></div>`;
     $("#mseg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; cur = b.dataset.c; store.set("miniComp", cur); drawTable(); });
   };
   drawTable();
