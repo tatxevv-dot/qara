@@ -317,7 +317,14 @@ async function homeRight() {
     box.innerHTML = `<div class="card-h">Таблица<a class="more" href="#/league/${cur}/table">Полностью</a></div>
       <div style="padding:0 14px 10px;overflow-x:auto"><div class="seg" id="mseg">${COMPS.map((c) => `<button data-c="${c.id}" class="${c.id === cur ? "on" : ""}" title="${esc(c.name)}" style="flex:1;display:grid;place-items:center"><img src="${c.logo}" alt="${esc(c.short)}" style="width:18px;height:18px;object-fit:contain;display:block"></button>`).join("")}</div></div>
       <table class="tbl"><thead><tr><th>#</th><th class="l">Команда</th><th>И</th><th>+/-</th><th>О</th></tr></thead><tbody>
-      ${st.slice(0, CUP_IDS.has(cur) ? 12 : 10).map((r) => `<tr onclick="location.hash='#/team/${r.team_id}'" style="cursor:pointer"><td class="pos"><i style="background:${r.note_color || "transparent"}"></i>${r.position}</td><td class="l"><span class="team">${crest(r.team, "crest sm")}${esc(r.team?.short_name || r.team?.name)}</span></td><td>${r.played}</td><td>${sgn(r.goals_for - r.goals_against, 0)}</td><td class="pts">${r.points}</td></tr>`).join("")}
+      ${(() => {
+        const row = (r) => `<tr onclick="location.hash='#/team/${r.team_id}'" style="cursor:pointer"><td class="pos"><i style="background:${r.note_color || "transparent"}"></i>${r.position}</td><td class="l"><span class="team">${crest(r.team, "crest sm")}${esc(r.team?.short_name || r.team?.name)}</span></td><td>${r.played}</td><td>${sgn(r.goals_for - r.goals_against, 0)}</td><td class="pts">${r.points}</td></tr>`;
+        const gs = [...new Set(st.map((r) => r.group_name || ""))].sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
+        if (gs.length < 2) return st.slice(0, CUP_IDS.has(cur) ? 12 : 10).map(row).join("");
+        const MAX = 4;
+        return gs.slice(0, MAX).map((g) => `<tr class="grp-row"><td colspan="5" style="text-align:left;padding:12px 16px 6px;font-size:12px;font-weight:700;color:var(--text-3);letter-spacing:.02em;background:var(--bg-sunk)">${esc(g)}</td></tr>` + st.filter((r) => (r.group_name || "") === g).sort((a, b) => a.position - b.position).map(row).join("")).join("")
+          + (gs.length > MAX ? `<tr class="grp-row"><td colspan="5" style="padding:12px 16px;text-align:center"><a class="more" href="#/league/${cur}/table">Ещё групп: ${gs.length - MAX} — смотреть все</a></td></tr>` : "");
+      })()}
       </tbody></table><div style="height:8px"></div>`;
     $("#mseg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; cur = b.dataset.c; store.set("miniComp", cur); drawTable(); });
   };
@@ -372,7 +379,7 @@ async function leagueOverview(id, box) {
 }
 function standingsTable(st, hl, o = {}) {
   if (!st.length) return `<div class="empty-note">Таблица пока недоступна.</div>`;
-  const groups = [...new Set(st.map((r) => r.group_name || ""))];
+  const groups = [...new Set(st.map((r) => r.group_name || ""))].sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
   const notes = [...new Map(st.filter((r) => r.note).map((r) => [r.note, r.note_color])).entries()];
   const forms = o.forms || {};
   const body = (rows) => `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>#</th><th class="l">Команда</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>Мячи</th><th>+/-</th><th>О</th>${o.compact ? "" : "<th>Форма</th>"}</tr></thead><tbody>
