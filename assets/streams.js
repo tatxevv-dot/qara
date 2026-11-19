@@ -24,17 +24,17 @@
 
 /* турниры */
 .sx-t{width:202px;height:150px;border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-decoration:none;color:#fff;background:linear-gradient(145deg,var(--c1),var(--c2));box-shadow:var(--shadow-xs)}
-.sx-t img{width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+.sx-t img{width:68px;height:68px;box-sizing:border-box;padding:12px;border-radius:50%;background:#fff;object-fit:contain}
 .sx-t b{font-size:16px;font-weight:700;text-align:center;padding:0 10px}
 
 /* вертикальная карточка трансляции */
 .sx-card{position:relative;width:202px;height:354px;border-radius:22px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:18px;text-decoration:none;color:#fff;background:linear-gradient(170deg,var(--c1) 0%,var(--c2) 78%)}
 .sx-card::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 60% at 50% 38%,rgba(255,255,255,.16),transparent 70%);pointer-events:none}
-.sx-lg{position:absolute;top:16px;left:16px;width:34px;height:34px;object-fit:contain;z-index:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
+.sx-lg{position:absolute;top:14px;left:14px;width:38px;height:38px;box-sizing:border-box;padding:6px;border-radius:12px;background:#fff;object-fit:contain;z-index:1}
 .sx-play{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;z-index:1;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .sx-play svg{width:12px;height:12px;fill:#fff}
 .sx-cr2{position:absolute;left:0;right:0;top:78px;height:120px;display:flex;justify-content:center;align-items:center;z-index:1}
-.sx-cr2 .sx-cr{width:92px;height:92px;object-fit:contain;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+.sx-cr2 .sx-cr{width:92px;height:92px;object-fit:contain;}
 .sx-cr2 .sx-cr:first-child{margin-right:-14px}
 .sx-badge{position:relative;z-index:1;align-self:flex-start;display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:12px;font-weight:800;font-size:14px;margin-bottom:12px;background:#ffd60a;color:#111}
 .sx-badge.live{background:#e5173f;color:#fff;letter-spacing:.02em}
@@ -46,9 +46,9 @@
 /* карточка эфирной записи */
 .sx-rec{width:202px;text-decoration:none;color:var(--text)}
 .sx-rec .pic{position:relative;height:114px;border-radius:16px;overflow:hidden;background:linear-gradient(150deg,#4a1470,#2a0a47);display:flex;align-items:center;justify-content:center;gap:0}
-.sx-rec .pic .sx-cr{width:60px;height:60px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))}
+.sx-rec .pic .sx-cr{width:60px;height:60px;object-fit:contain;}
 .sx-rec .pic .sep{width:1px;height:62px;background:rgba(255,255,255,.35);margin:0 22px}
-.sx-rec .pic .lg{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:20px;height:20px;object-fit:contain;opacity:.9}
+.sx-rec .pic .lg{position:absolute;top:8px;left:8px;width:26px;height:26px;box-sizing:border-box;padding:4px;border-radius:8px;background:#fff;object-fit:contain}
 .sx-rec .pic .tag{position:absolute;left:8px;bottom:8px;padding:3px 8px;border-radius:8px;background:#ffd60a;color:#111;font-size:11px;font-weight:800}
 .sx-rec .t{margin-top:10px;font-size:15px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sx-rec .s{font-size:14px;color:var(--text-3);margin-top:2px}
