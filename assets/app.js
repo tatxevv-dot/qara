@@ -1033,7 +1033,7 @@ async function viewStats(c, sKey) {
 /* ================= COMPARE ================= */
 async function viewCompare(params) {
   const ids = [params.get("a"), params.get("b")];
-  app().innerHTML = `<div class="wrap"><div class="card"><div class="hero"><div class="meta"><h1 class="title">Сравнение игроков</h1></div></div>
+  app().innerHTML = `<div class="wrap"><div class="card" style="overflow:visible;position:relative;z-index:30"><div class="hero"><div class="meta"><h1 class="title">Сравнение игроков</h1></div></div>
     <div class="card-b" style="padding:22px 28px 26px"><div class="cmp-pick">${[0, 1].map((i) => `<div class="dd"><input id="pick${i}" placeholder="${i ? "Второй игрок" : "Первый игрок"}" autocomplete="off"><div class="dd-list" id="dd${i}"></div></div>`).join("")}</div></div></div>
     <div class="section-gap"></div><div id="cbody"></div></div>`;
   const sel = [null, null];
