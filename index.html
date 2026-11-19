@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>qara. — футбол онлайн: матчи, таблицы, статистика</title>
+<meta name="description" content="qara. — футбол онлайн: расписание и результаты матчей, турнирные таблицы и статистика игроков АПЛ, Ла Лиги, Серии A, Бундеслиги, Лиги 1 и Лиги чемпионов.">
+<link rel="canonical" href="https://tatxevv-dot.github.io/qara/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="qara.">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:url" content="https://tatxevv-dot.github.io/qara/">
+<meta property="og:title" content="qara. — футбол онлайн">
+<meta property="og:description" content="Матчи, таблицы и статистика топ-5 лиг и Лиги чемпионов. Мы там, где футбол.">
+<meta property="og:image" content="https://tatxevv-dot.github.io/qara/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="application-name" content="qara.">
+<meta name="apple-mobile-web-app-title" content="qara.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"qara.","alternateName":["qara","Qara"],"url":"https://tatxevv-dot.github.io/qara/","inLanguage":"ru"}</script>
+<meta name="robots" content="index,follow">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f5f5f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="icon" href="assets/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://pvocjvvzkvzhckilhokx.supabase.co">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap&subset=cyrillic">
+<link rel="stylesheet" href="assets/zone.min.css?v=12">
+<link rel="stylesheet" href="assets/stats.css?v=7">
+<script>
+try{var t=JSON.parse(localStorage.getItem("zone.theme"));if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}
+addEventListener("hashchange",function(){window.__zn=Date.now()});
+</script>
+</head>
+<body>
+<a class="skip" href="#app">К содержимому</a>
+<noscript><div class="ns">Для работы qara нужен JavaScript.</div></noscript>
+<div id="loader" aria-hidden="true"></div>
+
+<header class="gnav">
+  <div class="gnav-in">
+    <a class="logo" href="#/" aria-label="qara — главная"><span>qara</span></a>
+    <nav class="gnav-links" aria-label="Основное меню">
+      <a href="#/" data-r="home">Матчи</a>
+      <button id="leaguesBtn" type="button">Лиги</button>
+      <a href="#/stats" data-r="stats">Статистика</a>
+    </nav>
+    <div class="gnav-icons">
+      <button class="icon-btn" id="searchBtn" type="button" aria-label="Поиск" title="Поиск ( / )"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Тема"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+      <button class="icon-btn burger" id="burger" type="button" aria-label="Меню"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<div class="flyout" id="fly-leagues" role="dialog" aria-label="Лиги">
+  <div class="flyout-in">
+    <div><h6>Турниры</h6><div class="big"></div></div>
+    <div><h6>Таблицы</h6><div class="small a"></div></div>
+    <div><h6>Игроки</h6><div class="small b"></div>
+      <h6 style="margin-top:16px">Разделы</h6>
+      <div class="small"><a href="#/">Матчи</a><a href="#/stats">Статистика</a></div>
+    </div>
+  </div>
+</div>
+
+<div class="flyout search-panel" id="fly-search" role="dialog" aria-label="Поиск">
+  <div class="flyout-in">
+    <div class="search-input">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Игроки, команды, лиги" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="search-results" id="sres"></div>
+  </div>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<main id="app" tabindex="-1"></main>
+
+<footer class="foot">
+  <div class="foot-in"><div>С любовью команда «<strong>Qara<span style="color: #00a859;">.</span></strong>»</div></div>
+</footer>
+
+<nav class="tabbar" aria-label="Навигация">
+  <a href="#/" data-r="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M12 5v14"/><circle cx="12" cy="12" r="2.6"/><path d="M3 9.5h2.5v5H3M21 9.5h-2.5v5H21"/></svg>Матчи</a>
+  <a href="#/leagues" id="tbLeagues" data-r="leagues"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 6H5.5A2.5 2.5 0 008 10.5M16 6h2.5a2.5 2.5 0 01-2.5 4.5M12 13v4M8.5 20h7"/></svg>Лиги</a>
+  <a href="#/stats" data-r="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20v-8M12 20V5M18 20v-5"/></svg>Статистика</a>
+</nav>
+
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="assets/app.js?v=34"></script>
+<script src="assets/auth.js?v=4"></script>
+<script src="assets/skin.js?v=10"></script>
+<script src="assets/ux.js?v=3"></script>
+<script src="assets/player.js?v=1"></script>
+<script src="assets/admin.js?v=9"></script>
+<script src="assets/logofix.js?v=1"></script>
+<script src="assets/streams.js?v=3"></script>
+<script src="assets/settings.js?v=1"></script>
+</body>
+</html>
