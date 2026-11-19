@@ -21,10 +21,11 @@
     };
     const assistsBy = {};
     for (const e of evs) { if ((e.type === "goal" || e.type === "penalty_goal") && e.raw?.assist) { const a = findByName(e.raw.assist); if (a) assistsBy[a.player_id] = (assistsBy[a.player_id] || 0) + 1; } }
-    const BALL = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2" fill="none" stroke="#1c1c1c" stroke-width="2"/><path d="M12 7.2l3.6 2.6-1.4 4.2H9.8L8.4 9.8z" fill="#1c1c1c"/><path d="M12 7.2V3M15.6 9.8l4-1.3M14.2 14l2.4 3.4M9.8 14l-2.4 3.4M8.4 9.8l-4-1.3" stroke="#1c1c1c" stroke-width="1.8" stroke-linecap="round"/></svg>';
-    const GL = (n) => `<i class="gl">${BALL}</i>`.repeat(Math.min(n, 3));
+    if (!document.getElementById("qsprite")) document.body.insertAdjacentHTML("beforeend", '<svg id="qsprite" width="0" height="0" style="position:absolute" aria-hidden="true"><defs><clipPath id="qbc"><circle cx="0" cy="0" r="64"/></clipPath><g id="qpp"><line x1="0" y1="-22" x2="0" y2="-40" stroke-width="6"/><polygon stroke-width="2" points="0,-40 -20.9,-55.2 -12.9,-79.8 12.9,-79.8 20.9,-55.2"/></g><g id="qg"><circle cx="128" cy="128" r="110" fill="#fff" stroke="#e6e6e6" stroke-width="12"/><g transform="translate(128 128)"><circle r="64" fill="#fff"/><g clip-path="url(#qbc)" fill="#222" stroke="#222" stroke-linejoin="round"><polygon stroke-width="2" points="0,-22 20.9,-6.8 12.9,17.8 -12.9,17.8 -20.9,-6.8"/><use href="#qpp"/><use href="#qpp" transform="rotate(72)"/><use href="#qpp" transform="rotate(144)"/><use href="#qpp" transform="rotate(216)"/><use href="#qpp" transform="rotate(288)"/></g><circle r="60" fill="none" stroke="#222" stroke-width="12"/></g></g><g id="qa"><circle cx="384" cy="128" r="110" fill="#fff" stroke="#e6e6e6" stroke-width="12"/><g transform="translate(384 126) rotate(-32) scale(1.05)"><path fill="#2b2b2b" d="M-58 12 Q-62 -4 -48 -8 L-22 -14 Q-6 -18 2 -32 L6 -46 L44 -48 Q56 -46 56 -32 L56 12 Z"/><path fill="#2b2b2b" d="M-60 12 H58 V22 Q58 26 54 26 H-52 Q-62 26 -60 12 Z"/><g fill="#2b2b2b"><rect x="-44" y="26" width="9" height="12" rx="2"/><rect x="-8" y="26" width="9" height="12" rx="2"/><rect x="34" y="26" width="9" height="12" rx="2"/></g><g stroke="#fff" stroke-width="7" stroke-linecap="round"><line x1="-26" y1="-2" x2="10" y2="-14"/><line x1="-30" y1="8" x2="14" y2="-6"/><line x1="-6" y1="8" x2="22" y2="-2"/></g></g></g></defs></svg>');
+    const GL = (n) => `<i class="gl"><svg viewBox="0 0 256 256"><use href="#qg"/></svg></i>`.repeat(Math.min(n, 3));
+    const AS = (n) => `<i class="as"><svg viewBox="256 0 256 256"><use href="#qa"/></svg></i>`.repeat(Math.min(n, 3));
     const marks = (p) => { const g = goalsBy[p.player_id], a = assistsBy[p.player_id], c = cardsBy[p.player_id];
-      return (g ? GL(g) : "") + (a ? `<i class="as">A${a > 1 ? `<b>${a}</b>` : ""}</i>` : "") + (c ? `<i class="cd ${c === "red" ? "card-r" : "card-y"}"></i>` : ""); };
+      return (g ? GL(g) : "") + (a ? AS(a) : "") + (c ? `<i class="cd ${c === "red" ? "card-r" : "card-y"}"></i>` : ""); };
     const last = (p) => p.player?.raw?.last || (p.player?.name || "").split(" ").slice(-1)[0] || "";
     const dot = (p, x, y) => {
       const g = goalsBy[p.player_id], a = assistsBy[p.player_id], c = cardsBy[p.player_id];
@@ -32,7 +33,7 @@
         + (p.rating ? `<i class="rt rating ${ratingCls(p.rating)}">${Number(p.rating).toFixed(1)}</i>` : "")
         + (p.raw?.subOut ? `<i class="so"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></i>${p.raw.outM != null ? `<em class="sm">${p.raw.outM}'</em>` : ""}` : "")
         + (c ? `<i class="cd ${c === "red" ? "card-r" : "card-y"}"></i>` : "")
-        + (g || a ? `<span class="ga">${g ? GL(g) : ""}${a ? `<i class="as">A${a > 1 ? `<b>${a}</b>` : ""}</i>` : ""}</span>` : "")
+        + (g || a ? `<span class="ga">${g ? GL(g) : ""}${a ? AS(a) : ""}</span>` : "")
         + `</span><span class="nm">${esc(last(p))}</span></a>`;
     };
     const half = (tid, away) => {
