@@ -78,19 +78,17 @@
   .lu-bench{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
 }
 
-/* lineups v2: thin rating-colored ring, new goal icon, assist "A", bench marks */
+/* lineups v2: hairline rating ring, FotMob-style goal badge, assist "A" */
 .luw .pl{--rc:#aab}
-.luw .pl.r-elite{--rc:#7fd6a2}.luw .pl.r-good{--rc:#a9d98f}.luw .pl.r-ok{--rc:#e6c875}.luw .pl.r-bad{--rc:#e8918b}.luw .pl.r-na{--rc:rgba(255,255,255,.35)}
-.luw .pl .ph,.luw .pl.a .ph{box-shadow:0 0 0 1.5px var(--rc),0 3px 8px rgba(0,0,0,.25)}
-.luw .pl .gl{background:none;padding:0;bottom:-5px;right:-7px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
-.luw .pl .gl svg{width:16px;height:16px}
-.pl .ga{position:absolute;bottom:-5px;right:-8px;display:flex;gap:2px;z-index:2}
-.pl .ga .gl,.pl .ga .as{position:static}
-.as{display:inline-flex;align-items:center;justify-content:center;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:#fff;color:#111;font-size:10px;font-weight:800;font-style:normal;line-height:1;box-shadow:0 1px 2px rgba(0,0,0,.4)}
-.as b,.gl b{font-size:9px;margin-left:1px}
-.bmk{display:flex;align-items:center;gap:5px;flex:none;margin-right:8px}
-.bmk .gl,.bmk .as,.bmk .cd{position:static;display:inline-flex;align-items:center;font-style:normal}
-.bmk .gl svg{width:17px;height:17px;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
-.bmk .gl b{font-size:10px;color:var(--text-2);margin-left:2px}
-.bmk .as{background:var(--fill);color:var(--text);box-shadow:none}
-.bmk .cd{width:10px;height:14px;border-radius:2px}
+.luw .pl.rc-elite{--rc:#7fd6a2}.luw .pl.rc-good{--rc:#a9d98f}.luw .pl.rc-ok{--rc:#e6c875}.luw .pl.rc-bad{--rc:#e8918b}.luw .pl.rc-na{--rc:rgba(255,255,255,.3)}
+.luw .pl .ph,.luw .pl.a .ph{box-shadow:0 0 0 1px var(--rc),0 2px 6px rgba(0,0,0,.2)}
+.pl .ga{position:absolute;bottom:-5px;right:-9px;display:flex;align-items:center;z-index:2}
+.gl,.as{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:#fff;border:1.5px solid #e4e4e4;box-sizing:border-box;font-style:normal;position:static}
+.gl+.gl,.gl+.as{margin-left:-7px}
+.gl svg{width:12px;height:12px}
+.as{font-size:10px;font-weight:800;color:#111;line-height:1}
+.as b{font-size:8px}
+.luw .pl .gl{position:static;background:#fff;padding:0;filter:none}
+.bmk{display:flex;align-items:center;flex:none;margin-right:8px}
+.bmk .cd{position:static;width:10px;height:14px;border-radius:2px;margin-left:5px}
+.bmk .as{background:#fff}

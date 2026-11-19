@@ -21,17 +21,18 @@
     };
     const assistsBy = {};
     for (const e of evs) { if ((e.type === "goal" || e.type === "penalty_goal") && e.raw?.assist) { const a = findByName(e.raw.assist); if (a) assistsBy[a.player_id] = (assistsBy[a.player_id] || 0) + 1; } }
-    const BALL = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#fff"/><path d="M12 6.6l4.3 3.1-1.6 5h-5.4l-1.6-5z" fill="#111"/><path d="M12 6.6V2.2M16.3 9.7l4.2-1.4M14.7 14.7l2.6 3.6M9.3 14.7l-2.6 3.6M7.7 9.7L3.5 8.3" stroke="#111" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>';
+    const BALL = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2" fill="none" stroke="#1c1c1c" stroke-width="2"/><path d="M12 7.2l3.6 2.6-1.4 4.2H9.8L8.4 9.8z" fill="#1c1c1c"/><path d="M12 7.2V3M15.6 9.8l4-1.3M14.2 14l2.4 3.4M9.8 14l-2.4 3.4M8.4 9.8l-4-1.3" stroke="#1c1c1c" stroke-width="1.8" stroke-linecap="round"/></svg>';
+    const GL = (n) => `<i class="gl">${BALL}</i>`.repeat(Math.min(n, 3));
     const marks = (p) => { const g = goalsBy[p.player_id], a = assistsBy[p.player_id], c = cardsBy[p.player_id];
-      return (g ? `<i class="gl">${BALL}${g > 1 ? `<b>${g}</b>` : ""}</i>` : "") + (a ? `<i class="as">A${a > 1 ? `<b>${a}</b>` : ""}</i>` : "") + (c ? `<i class="cd ${c === "red" ? "card-r" : "card-y"}"></i>` : ""); };
+      return (g ? GL(g) : "") + (a ? `<i class="as">A${a > 1 ? `<b>${a}</b>` : ""}</i>` : "") + (c ? `<i class="cd ${c === "red" ? "card-r" : "card-y"}"></i>` : ""); };
     const last = (p) => p.player?.raw?.last || (p.player?.name || "").split(" ").slice(-1)[0] || "";
     const dot = (p, x, y) => {
       const g = goalsBy[p.player_id], a = assistsBy[p.player_id], c = cardsBy[p.player_id];
-      return `<a class="pl ${ratingCls(p.rating)}" href="#/player/${p.player_id}" style="left:${x}%;top:${y}%"><span class="ph"><span>${esc(p.raw?.jersey || "")}</span><img src="${headshot(p.player_id)}" alt="" loading="lazy" onerror="__phErr(this,'${p.player_id}')">`
+      return `<a class="pl ${ratingCls(p.rating).replace("r-","rc-")}" href="#/player/${p.player_id}" style="left:${x}%;top:${y}%"><span class="ph"><span>${esc(p.raw?.jersey || "")}</span><img src="${headshot(p.player_id)}" alt="" loading="lazy" onerror="__phErr(this,'${p.player_id}')">`
         + (p.rating ? `<i class="rt rating ${ratingCls(p.rating)}">${Number(p.rating).toFixed(1)}</i>` : "")
         + (p.raw?.subOut ? `<i class="so"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></i>${p.raw.outM != null ? `<em class="sm">${p.raw.outM}'</em>` : ""}` : "")
         + (c ? `<i class="cd ${c === "red" ? "card-r" : "card-y"}"></i>` : "")
-        + (g || a ? `<span class="ga">${g ? `<i class="gl">${BALL}${g > 1 ? `<b>${g}</b>` : ""}</i>` : ""}${a ? `<i class="as">A${a > 1 ? `<b>${a}</b>` : ""}</i>` : ""}</span>` : "")
+        + (g || a ? `<span class="ga">${g ? GL(g) : ""}${a ? `<i class="as">A${a > 1 ? `<b>${a}</b>` : ""}</i>` : ""}</span>` : "")
         + `</span><span class="nm">${esc(last(p))}</span></a>`;
     };
     const half = (tid, away) => {
