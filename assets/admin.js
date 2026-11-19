@@ -1,7 +1,7 @@
 /* Zone — match streams (table match_streams). Admins add/delete from the bottom of a match page. Loaded after app.js/auth.js. */
 (function () {
   "use strict";
-  let isAdmin = false, uid = null, lastKey = "";
+  let isAdmin = false, uid = null, lastKey = "", lastStatus = "", lastHl = false;
   const matchId = () => { const m = location.hash.match(/^#\/match\/([^/?]+)/); return m ? decodeURIComponent(m[1]) : null; };
   const kindOf = (u, k) => k && k !== "auto" ? k : /\.m3u8(\?|$)/i.test(u) ? "hls" : /\.(mp4|webm|mov)(\?|$)/i.test(u) ? "mp4" : "iframe";
   const killPlayers = () => { try { cur?.destroy(); } catch (e) {} cur = null; };
@@ -25,8 +25,24 @@
     if (matchId() !== id || !$("#app .wrap")) return;
     const w = $("#app .wrap"), nav = $(".localnav", w);
 
+    let mt = null;
+    try { [mt] = await run(sb.from("matches").select("utc_date,status,raw,home:teams!matches_home_team_id_fkey(name),away:teams!matches_away_team_id_fkey(name)").eq("id", id)); } catch (e) {}
+    if (matchId() !== id || !$("#app .wrap")) return;
+    lastStatus = mt?.status || ""; lastHl = false;
+
     /* ---- player: at the top, under the match header ---- */
-    if (rows.length) {
+    if (mt?.status === "FINISHED") {
+      /* ---- finished: highlights take the place of the stream ---- */
+      const h = mt.raw?.highlight, ok = !!(h && /^[\w-]{11}$/.test(h.id)); lastHl = ok;
+      const top = document.createElement("div"); top.id = "mstream-top"; top.className = "card stream-card"; top.style.marginTop = "16px";
+      if (ok) top.innerHTML = `<div class="card-h">Обзор матча</div><div class="st-item"><div class="st-box"><iframe src="https://www.youtube-nocookie.com/embed/${h.id}?rel=0" title="${esc(h.title || "Обзор матча")}" allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div></div>`;
+      else {
+        const q = encodeURIComponent(`${mt.home?.name || ""} ${mt.away?.name || ""} highlights ${(mt.utc_date || "").slice(0, 10)}`);
+        top.innerHTML = `<div class="card-h">Обзор матча</div><div class="st-item"><div class="st-box"><div class="st-err"><div>Обзор появится после публикации<br><a href="https://www.youtube.com/results?search_query=${q}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Искать на YouTube ↗</a></div></div></div></div>`;
+      }
+      if (nav) nav.before(top); else w.appendChild(top);
+    }
+    else if (rows.length) {
       const top = document.createElement("div"); top.id = "mstream-top"; top.className = "card stream-card"; top.style.marginTop = "16px";
       top.innerHTML = `<div class="card-h">Трансляция<span class="live-dot" style="margin-left:8px"></span>${rows.length > 1 ? `<span class="st-srcs">${rows.map((s, i) => `<button type="button" data-i="${i}" class="${i ? "" : "on"}">${esc(s.title || "Поток " + (i + 1))}</button>`).join("")}</span>` : ""}</div><div class="st-item"><div class="st-box"></div></div>`;
       if (nav) nav.before(top); else w.appendChild(top);
@@ -36,9 +52,6 @@
     }
     else {
       /* ---- upcoming match, no stream yet: placeholder ---- */
-      let mt = null;
-      try { [mt] = await run(sb.from("matches").select("utc_date,status").eq("id", id)); } catch (e) {}
-      if (matchId() !== id || !$("#app .wrap")) return;
       const start = mt ? new Date(mt.utc_date) : null;
       if (mt && start && mt.status === "SCHEDULED" && start.getTime() > Date.now()) {
         const top = document.createElement("div"); top.id = "mstream-top"; top.className = "card stream-card";
@@ -88,6 +101,15 @@
       toast("Трансляция добавлена"); render(true);
     });
   }
+
+  /* match finished while the page is open, or highlight appeared later -> swap the player */
+  setInterval(async () => {
+    const id = matchId(); if (!id || !lastStatus || document.hidden || (lastStatus === "FINISHED" && lastHl)) return;
+    try {
+      const [m] = await run(sb.from("matches").select("status,raw").eq("id", id));
+      if (m && matchId() === id && ((m.status === "FINISHED" && lastStatus !== "FINISHED") || (m.status === "FINISHED" && m.raw?.highlight?.id))) render(true);
+    } catch (e) {}
+  }, 60000);
 
   let t = 0; const kick = (force) => { clearTimeout(t); t = setTimeout(() => render(force), 60); };
   new MutationObserver(() => kick(false)).observe($("#app"), { childList: true });
