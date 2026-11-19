@@ -9,14 +9,29 @@
       if (e.type === "goal" || e.type === "penalty_goal") goalsBy[e.player_id] = (goalsBy[e.player_id] || 0) + 1;
       if (e.type === "yellow" || e.type === "red") cardsBy[e.player_id] = e.type;
     }
+    const norm = (x) => (x || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+    const byName = {};
+    for (const p of pms) { const n = norm(p.player?.name); if (n) byName[n] = p; }
+    const findByName = (nm) => {
+      const n = norm(nm); if (!n) return null;
+      if (byName[n]) return byName[n];
+      const l = n.split(" ").pop();
+      const c = pms.filter((p) => { const pn = norm(p.player?.name); return pn.endsWith(" " + l) || pn === l; });
+      return c.length === 1 ? c[0] : null;
+    };
+    const assistsBy = {};
+    for (const e of evs) { if ((e.type === "goal" || e.type === "penalty_goal") && e.raw?.assist) { const a = findByName(e.raw.assist); if (a) assistsBy[a.player_id] = (assistsBy[a.player_id] || 0) + 1; } }
+    const BALL = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#fff"/><path d="M12 6.6l4.3 3.1-1.6 5h-5.4l-1.6-5z" fill="#111"/><path d="M12 6.6V2.2M16.3 9.7l4.2-1.4M14.7 14.7l2.6 3.6M9.3 14.7l-2.6 3.6M7.7 9.7L3.5 8.3" stroke="#111" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>';
+    const marks = (p) => { const g = goalsBy[p.player_id], a = assistsBy[p.player_id], c = cardsBy[p.player_id];
+      return (g ? `<i class="gl">${BALL}${g > 1 ? `<b>${g}</b>` : ""}</i>` : "") + (a ? `<i class="as">A${a > 1 ? `<b>${a}</b>` : ""}</i>` : "") + (c ? `<i class="cd ${c === "red" ? "card-r" : "card-y"}"></i>` : ""); };
     const last = (p) => p.player?.raw?.last || (p.player?.name || "").split(" ").slice(-1)[0] || "";
     const dot = (p, x, y) => {
-      const g = goalsBy[p.player_id], c = cardsBy[p.player_id];
-      return `<a class="pl" href="#/player/${p.player_id}" style="left:${x}%;top:${y}%"><span class="ph"><span>${esc(p.raw?.jersey || "")}</span><img src="${headshot(p.player_id)}" alt="" loading="lazy" onerror="__phErr(this,'${p.player_id}')">`
+      const g = goalsBy[p.player_id], a = assistsBy[p.player_id], c = cardsBy[p.player_id];
+      return `<a class="pl ${ratingCls(p.rating)}" href="#/player/${p.player_id}" style="left:${x}%;top:${y}%"><span class="ph"><span>${esc(p.raw?.jersey || "")}</span><img src="${headshot(p.player_id)}" alt="" loading="lazy" onerror="__phErr(this,'${p.player_id}')">`
         + (p.rating ? `<i class="rt rating ${ratingCls(p.rating)}">${Number(p.rating).toFixed(1)}</i>` : "")
         + (p.raw?.subOut ? `<i class="so"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></i>${p.raw.outM != null ? `<em class="sm">${p.raw.outM}'</em>` : ""}` : "")
         + (c ? `<i class="cd ${c === "red" ? "card-r" : "card-y"}"></i>` : "")
-        + (g ? `<i class="gl">${ICON.ball}${g > 1 ? `<b>${g}</b>` : ""}</i>` : "")
+        + (g || a ? `<span class="ga">${g ? `<i class="gl">${BALL}${g > 1 ? `<b>${g}</b>` : ""}</i>` : ""}${a ? `<i class="as">A${a > 1 ? `<b>${a}</b>` : ""}</i>` : ""}</span>` : "")
         + `</span><span class="nm">${esc(last(p))}</span></a>`;
     };
     const half = (tid, away) => {
@@ -34,7 +49,7 @@
     };
     const bench = (t, tid) => {
       const rows = pms.filter((p) => p.team_id === tid && !p.raw?.starter).sort((a, b) => (b.minutes || 0) - (a.minutes || 0))
-        .map((p) => `<a class="brow" href="#/player/${p.player_id}"><span class="no">${esc(p.raw?.jersey || "")}</span>${avatar(p.player_id, p.player?.name)}<span class="grow">${esc(p.player?.name)}<br><small>${esc(p.raw?.pos || "")}${p.raw?.subIn ? ` · <span style="color:var(--win)">↑ ${p.raw.inM}'</span>` : ""}</small></span>${p.minutes ? ratingChip(p.rating) : ""}</a>`).join("");
+        .map((p) => `<a class="brow" href="#/player/${p.player_id}"><span class="no">${esc(p.raw?.jersey || "")}</span>${avatar(p.player_id, p.player?.name)}<span class="grow">${esc(p.player?.name)}<br><small>${esc(p.raw?.pos || "")}${p.raw?.subIn ? ` · <span style="color:var(--win)">↑ ${p.raw.inM}'</span>` : ""}</small></span><span class="bmk">${marks(p)}</span>${p.minutes ? ratingChip(p.rating) : ""}</a>`).join("");
       return rows ? `<div class="lu-sub">Запасные · ${esc(t.short_name || t.name)}</div><div class="bench1">${rows}</div>` : "";
     };
     const halfH = (tid, home) => {
