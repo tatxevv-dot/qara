@@ -53,6 +53,16 @@
 .sx-rec .t{margin-top:10px;font-size:15px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sx-rec .s{font-size:14px;color:var(--text-3);margin-top:2px}
 
+
+/* скелетоны */
+.sx-sk-h{height:22px;width:42%;border-radius:8px;margin:0 4px 16px}
+.sx-sk-t{width:202px;height:150px;border-radius:22px}
+.sx-sk-c{width:202px;height:354px;border-radius:22px}
+.sx-sk-p{width:202px;height:114px;border-radius:16px}
+.sx-sk-l{height:12px;border-radius:6px;margin-top:10px}
+.sx-lgsk{display:flex;align-items:center;gap:14px;padding:14px 4px}
+.sx-lgsk .skl.circle{width:36px;height:36px}
+
 /* нижняя панель: 4 пункта */
 .tabbar{grid-template-columns:repeat(4,1fr)!important}
 `;
@@ -68,7 +78,7 @@
     const tb = document.querySelector(".tabbar");
     if (tb && !tb.querySelector('[data-r="streams"]')) {
       const a = document.createElement("a"); a.href = "#/streams"; a.dataset.r = "streams";
-      a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10.5 9.5l4 2.5-4 2.5z"/></svg>Трансляции';
+      a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10.4 8.9l4.3 3.1-4.3 3.1z"/></svg>Трансляции';
       const first = tb.querySelector("a"); first ? first.after(a) : tb.prepend(a);
     }
   }
@@ -136,6 +146,19 @@
   const head = (t, href) => `<div class="sx-h"><h2>${t}</h2>${href ? `<a href="${href}" aria-label="Все">все ›</a>` : ""}</div>`;
   const row = (arr, fn, empty, grid) => arr.length ? `<div class="${grid ? "sx-grid" : "sx-row"}">${arr.map(fn).join("")}</div>` : `<div class="sx-empty">${empty}</div>`;
 
+
+  /* ---------- скелетоны ---------- */
+  const sb_ = (c, st) => `<i class="skl ${c}"${st ? ` style="${st}"` : ""}></i>`;
+  const skRow = (n, cls, extra) => `<div class="sx-row">${Array.from({ length: n }, () => `<div>${sb_(cls)}${extra || ""}</div>`).join("")}</div>`;
+  const skSec = (body) => `<div class="sx-sec">${sb_("sx-sk-h")}${body}</div>`;
+  const recSk = `${sb_("sx-sk-l", "width:85%")}${sb_("sx-sk-l", "width:45%;margin-top:8px")}`;
+  function skeleton(id) {
+    const cards = skSec(skRow(3, "sx-sk-c")), recs = skSec(skRow(3, "sx-sk-p", recSk));
+    if (!id) return `<div class="wrap sx skl-page"><div class="sx-sec" style="margin-top:20px">${sb_("sx-sk-h")}${skRow(3, "sx-sk-t")}</div>${cards}${recs}</div>`;
+    return `<div class="wrap sx skl-page"><div class="sx-sec" style="margin-top:20px">${sb_("sx-sk-h", "width:30%")}</div>${cards}${recs}</div>`;
+  }
+  const leaguesSk = () => `<div class="wrap lg skl-page"><div style="padding:20px 4px 6px">${sb_("", "height:32px;width:35%;border-radius:10px")}</div><div style="padding:10px 4px">${sb_("", "height:44px;border-radius:14px")}</div>${Array.from({ length: 8 }, (_, i) => `<div class="sx-lgsk">${sb_("circle")}${sb_("", `height:14px;width:${[52, 40, 60, 45, 56, 38, 50, 44][i]}%`)}</div>`).join("")}</div>`;
+
   /* ---------- страница ---------- */
   let busy = false;
   async function render() {
@@ -143,7 +166,7 @@
     const app = document.querySelector("#app"), id = partOf(), key = location.hash;
     try {
       addNav(); markActive();
-      app.innerHTML = '<div class="wrap sx"><div class="sx-empty" style="margin-top:24px">Загрузка…</div></div>';
+      app.innerHTML = skeleton(id);
       window.scrollTo({ top: 0 });
       const { up, done } = await load(id);
       if (location.hash !== key) return;
@@ -172,6 +195,21 @@
   /* ---------- подключение к роутеру app.js ---------- */
   const origHome = window.viewHome;
   window.viewHome = function () { return isStreams() ? render() : origHome.apply(this, arguments); };
+
+
+  /* «Лиги»: скелетон, пока подгружаются логотипы */
+  const origLeagues = window.viewLeagues;
+  if (typeof origLeagues === "function") window.viewLeagues = async function () {
+    const app = document.querySelector("#app"), self = this, args = arguments;
+    app.innerHTML = leaguesSk();
+    try {
+      await Promise.race([
+        Promise.all(COMPS.map((c) => new Promise((ok) => { const im = new Image(); im.onload = im.onerror = ok; im.src = c.logo; }))),
+        new Promise((ok) => setTimeout(ok, 700)),
+      ]);
+    } catch (e) {}
+    if (/^#\/leagues(\/|\?|$)/.test(location.hash)) return origLeagues.apply(self, args);
+  };
 
   /* страница могла быть открыта сразу по ссылке #/streams — главная из app.js успеет отрисоваться раньше нас */
   let tmr;
