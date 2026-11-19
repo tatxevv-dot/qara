@@ -92,3 +92,5 @@
 .bmk .gl .n,.bmk .as .n{color:var(--text-2);text-shadow:none}
 .bmk .gl svg,.bmk .as svg{filter:none}
 .bmk .cd{position:static;width:10px;height:14px;border-radius:2px}
+.luw .pl .gl svg,.luw .pl .as svg,.luw .bmk .gl svg,.luw .bmk .as svg{width:20px;height:20px}
+.luw .pl .gl b,.luw .pl .as b{padding:0;font-size:10px}
