@@ -80,7 +80,12 @@
         <div><label>Качество</label><input name="quality" placeholder="1080p"></div>
         <div><label>Комментатор</label><input name="commentator"></div>
         <div class="full"><div class="adm-msg" id="admMsg" style="padding:0"></div><button type="submit" class="adm-btn">Добавить трансляцию</button> <button type="button" class="adm-btn ghost" id="admCancel">Отмена</button></div>
-      </form></div>`;
+      </form></div>${mt?.status === "FINISHED" ? `<div class="card" style="margin-top:16px"><div class="card-h">Обзор матча (админ)</div>
+        <div class="st-item"><small style="opacity:.6;word-break:break-all">${mt.raw?.highlight?.id ? "Сейчас: https://youtu.be/" + esc(mt.raw.highlight.id) : "Обзор не добавлен"}</small></div>
+        <form id="hlForm" class="adm-form" novalidate>
+          <div class="full"><label>Ссылка на YouTube</label><input name="url" placeholder="https://www.youtube.com/watch?v=… или https://youtu.be/…" autocomplete="off" autocapitalize="off"></div>
+          <div class="full"><div class="adm-msg" id="hlMsg" style="padding:0"></div><button type="submit" class="adm-btn">Сохранить обзор</button>${mt.raw?.highlight?.id ? ` <button type="button" class="adm-btn del" id="hlDel">Убрать обзор</button>` : ""}</div>
+        </form></div>` : ""}`;
     w.appendChild(sec);
     const form = $("#admForm", sec), msg = $("#admMsg", sec), say = (t, ok) => { msg.textContent = t; msg.classList.toggle("ok", !!ok); };
     $("#admOpen", sec).onclick = () => { form.hidden = !form.hidden; if (!form.hidden) form.url.focus(); };
@@ -100,6 +105,24 @@
       if (error) return say(/row-level|permission/i.test(error.message) ? "Нет прав: аккаунт не админ" : error.message);
       toast("Трансляция добавлена"); render(true);
     });
+
+    /* ---- highlight (finished matches): saved via RPC, readable by everyone from matches.raw.highlight ---- */
+    const hlForm = $("#hlForm", sec);
+    if (hlForm) {
+      const hmsg = $("#hlMsg", sec), hsay = (t) => { hmsg.textContent = t; };
+      const ytId = (u) => { u = u.trim(); if (/^[\w-]{11}$/.test(u)) return u;
+        try { const x = new URL(u), h = x.hostname.replace(/^(www|m)\./, "");
+          if (h === "youtu.be") return x.pathname.slice(1).split("/")[0] || null;
+          if (/(^|\.)youtube(-nocookie)?\.com$/.test(h)) return x.searchParams.get("v") || (x.pathname.match(/^\/(?:embed|shorts|live|v)\/([\w-]{11})/) || [])[1] || null;
+        } catch (e) {} return null; };
+      const save = async (vid) => {
+        const { error } = await sbAuth.rpc("set_match_highlight", { p_match: id, p_video: vid, p_title: vid ? "Обзор матча" : null });
+        if (error) return hsay(/not admin|permission/i.test(error.message) ? "Нет прав: аккаунт не админ" : error.message);
+        toast(vid ? "Обзор сохранён" : "Обзор убран"); render(true);
+      };
+      hlForm.addEventListener("submit", (e) => { e.preventDefault(); const vid = ytId(hlForm.url.value); if (!vid) return hsay("Не похоже на ссылку YouTube"); hsay(""); save(vid); });
+      $("#hlDel", sec)?.addEventListener("click", () => { if (confirm("Убрать обзор?")) save(null); });
+    }
   }
 
   /* match finished while the page is open, or highlight appeared later -> swap the player */
