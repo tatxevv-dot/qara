@@ -44,6 +44,7 @@
 .sx-card.mma{background:linear-gradient(170deg,#c4122b 0%,#14080c 80%)}
 .sx-ufc{position:absolute;top:14px;left:14px;height:38px;padding:0 10px;border-radius:12px;background:#fff;color:#d20a0a;font-weight:900;font-size:15px;letter-spacing:.02em;display:grid;place-items:center;z-index:1}
 .sx-ph{position:relative;width:88px;height:88px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.16);display:grid;place-items:center;font-weight:800;font-size:24px;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 8px 18px rgba(0,0,0,.35);flex:none}
+.sx-ph em{font-style:normal}.sx-ph.ok em{display:none}
 .sx-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
 .sx-cr2 .sx-ph+.sx-ph{margin-left:-16px}
 .sx-t .sx-ufcl{width:68px;height:68px;border-radius:50%;background:#fff;color:#d20a0a;display:grid;place-items:center;font-weight:900;font-size:18px}
@@ -144,7 +145,7 @@
   const dm = (d) => new Date(d).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
 
   const ini = (n) => (n || "?").split(" ").map((x) => x[0]).slice(0, 2).join("").toUpperCase();
-  const fph = (f) => `<span class="sx-ph"><img src="${esc(f?.photo_url || "")}" alt="" loading="lazy" onerror="this.remove()">${esc(ini(f?.name))}</span>`;
+  const fph = (f) => `<span class="sx-ph"><img src="${esc(f?.photo_url || "")}" alt="" loading="lazy" onload="this.parentNode.classList.add('ok')" onerror="this.remove()"><em>${esc(ini(f?.name))}</em></span>`;
   function mmaCard(m) {
     const live = LIVE(m), last = (f) => (f ? f.name.split(" ").slice(-1)[0] : "—");
     const badge = live ? `<span class="sx-badge live">LIVE</span>` : `<span class="sx-badge">${dm(m.utc_date)} <i>·</i> ${fmtTime(m.utc_date)}</span>`;

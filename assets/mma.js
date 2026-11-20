@@ -15,12 +15,12 @@
   const age = (b) => (b ? Math.floor((Date.now() - new Date(b)) / 31557600000) : null);
   const flag = (cc) => (cc && /^[a-z]{2}(-[a-z]{3})?$/i.test(cc) ? `<img class=\"mm-fl\" src=\"https://flagcdn.com/w40/${cc.toLowerCase()}.png\" srcset=\"https://flagcdn.com/w80/${cc.toLowerCase()}.png 2x\" alt=\"\" loading=\"lazy\" onerror=\"this.remove()\">` : "");
   const ini = (n) => (n || "?").split(" ").map((x) => x[0]).slice(0, 2).join("").toUpperCase();
-  const ph = (f, cls = "mm-ph") => `<span class="${cls}"><img src="${E(f?.photo_url || "")}" alt="" loading="lazy" onerror="this.remove()">${E(ini(f?.name))}</span>`;
+  const ph = (f, cls = "mm-ph") => `<span class="${cls}"><img src="${E(f?.photo_url || "")}" alt="" loading="lazy" onload="this.parentNode.classList.add('ok')" onerror="this.remove()"><em>${E(ini(f?.name))}</em></span>`;
   const skel = (n = 6) => Array.from({ length: n }, () => `<div class="sk sk-row"></div>`).join("");
   const set = (h) => { root().innerHTML = h; };
   const FSEL = "id,name,nickname,country,country_code,photo_url,wins,losses,draws,no_contests,weight_class";
 
-  const subnav = (cur) => `<div class="mm-sub"><a href="#/mma" class="${cur === "sched" ? "on" : ""}">Карды</a><a href="#/mma/rankings" class="${cur === "rank" ? "on" : ""}">Рейтинги</a></div>`;
+  const subnav = (cur, tab) => { const on = (k) => (cur === k ? " on" : ""); return `<nav class="mm-seg" aria-label="Разделы UFC"><a href="#/mma" class="${cur === "sched" && tab !== "past" ? "on" : ""}">Ближайшие</a><a href="#/mma?t=past" class="${cur === "sched" && tab === "past" ? "on" : ""}">Прошедшие</a><a href="#/mma/rankings" class="${on("rank").trim()}">Рейтинги</a></nav>`; };
   const head = (t, s) => `<div class="mm-h"><h1>${t}</h1>${s ? `<p>${s}</p>` : ""}</div>`;
 
   /* ---------- карты бойца в строке боя ---------- */
@@ -72,7 +72,7 @@
 
   async function viewSchedule(params) {
     const tab = params.get("t") === "past" ? "past" : "up";
-    set(`<div class="wrap mm">${head("UFC", "Карды, бои и рейтинги")}${subnav("sched")}<div class="mm-tabs"><a href="#/mma" class="pill ${tab === "up" ? "on" : ""}">Ближайшие</a><a href="#/mma?t=past" class="pill ${tab === "past" ? "on" : ""}">Прошедшие</a></div><div id="mmL"><div class="sk mm-hero-sk"></div>${skel(4)}</div></div>`);
+    set(`<div class="wrap mm"><h1 class="mm-title">UFC</h1>${subnav("sched", tab)}<div id="mmL"><div class="sk mm-hero-sk"></div>${skel(4)}</div></div>`);
     const now = new Date().toISOString();
     let q = sb.from("mma_events").select("*");
     q = tab === "up" ? q.gte("start_time", new Date(Date.now() - 6 * 36e5).toISOString()).order("start_time", { ascending: true }).limit(20) : q.lt("start_time", now).order("start_time", { ascending: false }).limit(30);

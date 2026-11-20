@@ -65,3 +65,10 @@ nav.tabbar{grid-template-columns:repeat(5,1fr)!important}
 .mm-dt{flex:none;width:48px;height:52px;border-radius:13px;background:var(--fill-2);display:flex;flex-direction:column;align-items:center;justify-content:center}.mm-dt b{font-size:19px;line-height:1}.mm-dt span{font-size:11.5px;color:var(--text-3);margin-top:3px;text-transform:uppercase}
 .mm-rb{flex:1;min-width:0}.mm-rb b{display:block;font-size:14.5px;line-height:1.25}.mm-rb span{display:block;font-size:13px;color:var(--text-2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mm-rb span i{font-style:normal;color:var(--text-3)}.mm-rb small{display:block;font-size:12px;color:var(--text-3);margin-top:3px}
 .mm-av{display:flex;flex:none}
+
+/* единый переключатель */
+.mm-title{margin:2px 4px 12px;font-size:28px;letter-spacing:-.03em}
+.mm-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:3px;margin:0 0 16px;background:var(--fill);border-radius:12px}
+.mm-seg a{text-align:center;padding:9px 4px;border-radius:9px;font-size:13.5px;font-weight:500;color:var(--text-2);white-space:nowrap}
+.mm-seg a.on{background:var(--bg-elev);color:var(--text);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.mm-ph em{font-style:normal}.mm-ph.ok em{display:none}
