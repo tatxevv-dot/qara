@@ -124,3 +124,11 @@ rc-c,rc-c.n{box-shadow:none!important}
   .localnav{transition:margin .25s ease,padding .25s ease,border-radius .25s ease,box-shadow .25s ease}
   .localnav.stuck{margin-left:calc(var(--gutter) * -1);margin-right:calc(var(--gutter) * -1);padding-left:calc(var(--gutter) + var(--space-2));padding-right:calc(var(--gutter) + var(--space-2));border-radius:0;border-bottom:1px solid var(--line-2)}
 }
+
+/* === Зазоры между всеми плашками подряд (кроме сеток, где gap уже есть) === */
+:not(.grid2):not(.cols):not(.two):not(.leaders-grid):not(.lg-grid)>.card+.card,
+:not(.grid2):not(.cols):not(.two):not(.leaders-grid):not(.lg-grid)>.card+.section-gap+.card,
+:not(.grid2):not(.cols):not(.two):not(.leaders-grid):not(.lg-grid)>.card+.card-like,
+#mcontent>.card+.card,#tcontent>.card+.card,#pcontent>.card+.card{
+  margin-top:var(--gap)!important;border-top:0!important;border-radius:var(--r-lg,16px)!important}
+.card:has(+.card),.card:has(+.section-gap+.card){border-radius:var(--r-lg,16px)!important}

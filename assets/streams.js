@@ -78,7 +78,7 @@
     const tb = document.querySelector(".tabbar");
     if (tb && !tb.querySelector('[data-r="streams"]')) {
       const a = document.createElement("a"); a.href = "#/streams"; a.dataset.r = "streams";
-      a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10.4 8.9l4.3 3.1-4.3 3.1z"/></svg>Трансляции';
+      a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M14.33 3.31A9 9 0 1 1 9.67 3.31"/><path d="M10.5 9.2L15.2 12l-4.7 2.8"/></svg>Трансляции';
       const first = tb.querySelector("a"); first ? first.after(a) : tb.prepend(a);
     }
   }
