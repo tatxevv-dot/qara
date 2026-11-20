@@ -33,3 +33,6 @@
 .mm-hw{flex:1;min-width:0}.mm-hw b{display:block;font-size:14px}.mm-hw small,.mm-hm small{display:block;color:var(--text-3);font-size:12px;margin-top:2px}.mm-hm{text-align:right;font-size:13px;font-weight:600;flex:none}
 .mm-rk.ch .rk{color:var(--warn);font-weight:800}.mm-rk .v{font-size:13px;color:var(--text-2)}
 .mm-home .mm-ev-in{display:block;color:inherit}.mm-vs{flex:1;text-align:center;font-size:14px;color:var(--text-3)}.mm-vs b{color:var(--text)}
+
+nav.tabbar{grid-template-columns:repeat(5,1fr)!important}
+.mm>.card.stream-card{margin-bottom:14px}

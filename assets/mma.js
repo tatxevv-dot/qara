@@ -68,7 +68,87 @@
   }
 
   /* ---------- карт ---------- */
+  let isAdmin = false, uid = null, curPlayer = null;
+  const killP = () => { try { curPlayer?.destroy(); } catch (e) {} curPlayer = null; };
+  async function checkAdmin() {
+    try { const { data: s } = await sbAuth.auth.getSession(); uid = s?.session?.user?.id || null; isAdmin = false;
+      if (uid) { const { data } = await sbAuth.rpc("is_admin"); isAdmin = data === true; } } catch (e) { isAdmin = false; }
+  }
+  const curEventId = () => { const m = location.hash.match(/^#\/mma\/event\/([^/?]+)/); return m ? m[1] : null; };
+
+  function playerCard(e, rows) {
+    const start = new Date(e.start_time), upcoming = e.status !== "FINISHED" && start.getTime() > Date.now();
+    if (rows.length) {
+      return `<div class="card stream-card" id="mmTop"><div class="card-h">Трансляция<span class="live-dot" style="margin-left:8px"></span>${rows.length > 1 ? `<span class="st-srcs">${rows.map((s, i) => `<button type="button" data-i="${i}" class="${i ? "" : "on"}">${E(s.title || "Поток " + (i + 1))}</button>`).join("")}</span>` : ""}</div><div class="st-item"><div class="st-box"></div></div></div>`;
+    }
+    if (upcoming) {
+      return `<div class="card stream-card" id="mmTop"><div class="card-h">Трансляция</div><div class="st-item"><div class="st-box"><button type="button" class="st-ph" aria-label="Трансляция"><span class="st-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span><span class="st-ph-msg" role="status" aria-live="polite"></span></button></div></div></div>`;
+    }
+    return `<div class="card stream-card" id="mmTop"><div class="card-h">Трансляция</div><div class="st-item"><div class="st-box"><div class="st-err"><div>Запись трансляции недоступна</div></div></div></div></div>`;
+  }
+
+  function adminPanel(e, rows) {
+    return `<div class="card" id="mmAdm"><div class="card-h">Трансляции (админ)</div>
+      ${rows.length ? rows.map((s, i) => `<div class="st-item"><div class="st-head"><b>${E(s.title || "Трансляция " + (i + 1))}</b><small>${[s.language, s.quality, s.commentator].filter(Boolean).map(E).join(" · ")}</small><button type="button" class="adm-btn del" data-del="${s.id}">Убрать</button></div><small style="opacity:.6;word-break:break-all">${E(s.url)}</small></div>`).join("") : `<div class="st-item"><small style="opacity:.6">Трансляций пока нет</small></div>`}
+      <div class="adm-bar"><button type="button" class="adm-btn" id="admOpen">Добавить трансляцию</button></div>
+      <form id="admForm" class="adm-form" hidden novalidate>
+        <div class="full"><label>Ссылка на трансляцию *</label><input name="url" placeholder="https://… (.m3u8 / .mp4 / страница плеера)" autocomplete="off" autocapitalize="off"></div>
+        <div class="full"><label>Название</label><input name="title" placeholder="Например: Основной поток"></div>
+        <div><label>Тип</label><select name="kind"><option value="auto">Авто</option><option value="hls">HLS (.m3u8)</option><option value="mp4">Видео (mp4)</option><option value="iframe">Встраиваемая страница</option></select></div>
+        <div><label>Язык</label><input name="language" placeholder="RU"></div>
+        <div><label>Качество</label><input name="quality" placeholder="1080p"></div>
+        <div><label>Комментатор</label><input name="commentator"></div>
+        <div class="full"><div class="adm-msg" id="admMsg" style="padding:0"></div><button type="submit" class="adm-btn">Добавить трансляцию</button> <button type="button" class="adm-btn ghost" id="admCancel">Отмена</button></div>
+      </form></div>`;
+  }
+
+  async function mountStreams(e, wrap) {
+    const id = String(e.id);
+    let rows = [];
+    try { rows = await Q(sb.from("mma_streams").select("*").eq("event_id", id).order("sort_order", { ascending: true }).order("created_at", { ascending: true })); } catch (er) { console.warn("[mma streams]", er.message); }
+    if (curEventId() !== id) return;
+    killP(); wrap.querySelector("#mmTop")?.remove(); wrap.querySelector("#mmAdm")?.remove();
+    const anchor = wrap.querySelector(".mm-h");
+    const tmp = document.createElement("div"); tmp.innerHTML = playerCard(e, rows);
+    const top = tmp.firstElementChild; anchor.after(top);
+    const box = top.querySelector(".st-box");
+    if (rows.length) {
+      const play = (i) => { killP(); curPlayer = window.ZonePlayer.mount(box, rows[i]); };
+      play(0);
+      top.querySelectorAll(".st-srcs button").forEach((b) => (b.onclick = () => { top.querySelectorAll(".st-srcs button").forEach((x) => x.classList.toggle("on", x === b)); play(+b.dataset.i); }));
+    } else {
+      const btn = top.querySelector(".st-ph"), out = top.querySelector(".st-ph-msg");
+      if (btn) btn.onclick = () => {
+        const start = new Date(e.start_time), left = start.getTime() - Date.now(), hhmm = fmtT(e.start_time);
+        out.textContent = left <= 600000 ? "Трансляция скоро появится" : "Трансляция появится за 10 минут до начала · начало в " + hhmm;
+        btn.classList.add("shown");
+      };
+    }
+    if (!isAdmin) return;
+    const t2 = document.createElement("div"); t2.innerHTML = adminPanel(e, rows);
+    const sec = t2.firstElementChild; wrap.appendChild(sec);
+    const form = sec.querySelector("#admForm"), msg = sec.querySelector("#admMsg"), say = (t, ok) => { msg.textContent = t; msg.classList.toggle("ok", !!ok); };
+    sec.querySelector("#admOpen").onclick = () => { form.hidden = !form.hidden; if (!form.hidden) form.url.focus(); };
+    sec.querySelector("#admCancel").onclick = () => { form.hidden = true; say(""); };
+    sec.addEventListener("click", async (ev) => {
+      const b = ev.target.closest("[data-del]"); if (!b || !confirm("Убрать эту трансляцию?")) return;
+      b.disabled = true; const { error } = await sbAuth.from("mma_streams").delete().eq("id", b.dataset.del);
+      if (error) { b.disabled = false; return toast("Ошибка: " + error.message); } toast("Трансляция убрана"); mountStreams(e, wrap);
+    });
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault(); const url = form.url.value.trim();
+      if (!/^https?:\/\/\S+$/i.test(url)) return say("Вставьте ссылку, начинающуюся с http(s)://");
+      const row = { event_id: id, url, kind: form.kind.value };
+      for (const k of ["title", "language", "quality", "commentator"]) { const v = form[k].value.trim(); if (v) row[k] = v; }
+      row.sort_order = rows.length; const btn = form.querySelector("button[type=submit]"); btn.disabled = true; say("");
+      const { error } = await sbAuth.from("mma_streams").insert(row); btn.disabled = false;
+      if (error) return say(/row-level|permission/i.test(error.message) ? "Нет прав: аккаунт не админ" : error.message);
+      toast("Трансляция добавлена"); mountStreams(e, wrap);
+    });
+  }
+
   async function viewEvent(id) {
+    killP();
     set(`<div class="wrap mm">${skel(8)}</div>`);
     const [e] = await Q(sb.from("mma_events").select("*").eq("id", id));
     if (!e) { set(`<div class="wrap"><div class="card"><div class="empty-note">Карт не найден.</div></div></div>`); return; }
@@ -80,8 +160,9 @@
       `<div class="card mm-sec"><div class="card-h">${SECT[k]}</div>${groups[k].map((x) => fightRow(x, fs[x.fighter1_id], fs[x.fighter2_id])).join("")}</div>`).join("");
     set(`<div class="wrap mm"><a class="mm-back" href="#/mma">← Все карды</a>
       ${head(E(e.name), `${fmtD(e.start_time, { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · ${fmtT(e.start_time)}<br>${E([e.venue, e.city, e.country].filter(Boolean).join(", "))}`)}
-      ${e.stream_url ? `<a class="pill" href="${E(e.stream_url)}" target="_blank" rel="noopener">Смотреть</a>` : ""}
       ${blocks || `<div class="card"><div class="empty-note">Бои ещё не объявлены.</div></div>`}</div>`);
+    await checkAdmin();
+    if (curEventId() === String(id)) mountStreams(e, root().querySelector(".wrap"));
   }
 
   /* ---------- боец ---------- */
@@ -145,6 +226,7 @@
 
   /* ---------- вход из роутера ---------- */
   window.viewMma = async function (parts, params) {
+    if (!(parts[0] === "event")) killP();
     document.title = "UFC — qara.";
     if (parts[0] === "event" && parts[1]) return viewEvent(parts[1]);
     if (parts[0] === "fighter" && parts[1]) return viewFighter(parts[1]);
@@ -171,4 +253,26 @@
   }
   new MutationObserver(homeCard).observe(document.getElementById("app") || document.body, { childList: true });
   homeCard();
+
+  /* ---------- UFC вторым пунктом в меню (после «Матчи») ---------- */
+  const TAB_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V7a2 2 0 014 0v3M11 10V6a2 2 0 014 0v4M15 10V8a2 2 0 014 0v6a6 6 0 01-6 6h-1a6 6 0 01-5-3l-2-3a1.6 1.6 0 012.6-1.8L7 13"/></svg>';
+  let navBusy = false;
+  function placeNav() {
+    if (navBusy) return; navBusy = true;
+    try {
+      [[".gnav-links", "UFC"], [".tabbar", TAB_ICON + "UFC"]].forEach(([sel, html]) => {
+        const box = document.querySelector(sel); if (!box) return;
+        let a = box.querySelector('[data-r="mma"]');
+        if (!a) { a = document.createElement("a"); a.href = "#/mma"; a.dataset.r = "mma"; a.innerHTML = html; }
+        const first = box.querySelector("a"); if (first && first !== a && first.nextElementSibling !== a) first.after(a);
+      });
+      const on = /^#\/mma(\/|\?|$)/.test(location.hash);
+      document.querySelectorAll('.gnav-links a[data-r="mma"]').forEach((a) => a.classList.toggle("active", on));
+      document.querySelectorAll('.tabbar a[data-r="mma"]').forEach((a) => a.classList.toggle("on", on));
+      if (on) { document.querySelectorAll('.gnav-links a:not([data-r="mma"])').forEach((a) => a.classList.remove("active")); document.querySelectorAll('.tabbar a:not([data-r="mma"])').forEach((a) => a.classList.remove("on")); }
+    } finally { navBusy = false; }
+  }
+  ["gnav-links", "tabbar"].forEach((c) => { const el = document.querySelector("." + c); if (el) new MutationObserver(placeNav).observe(el, { childList: true }); });
+  addEventListener("hashchange", () => setTimeout(placeNav, 0));
+  placeNav(); setTimeout(placeNav, 300);
 })();
