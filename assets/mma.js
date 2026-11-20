@@ -13,7 +13,7 @@
   const fmtT = (d) => new Date(d).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
   const rec = (f) => `${f.wins}-${f.losses}${f.draws ? "-" + f.draws : ""}${f.no_contests ? ` (${f.no_contests} NC)` : ""}`;
   const age = (b) => (b ? Math.floor((Date.now() - new Date(b)) / 31557600000) : null);
-  const flag = (cc) => (cc && cc.length === 2 ? String.fromCodePoint(...cc.toUpperCase().split("").map((c) => 127397 + c.charCodeAt(0))) : "");
+  const flag = (cc) => (cc && /^[a-z]{2}(-[a-z]{3})?$/i.test(cc) ? `<img class=\"mm-fl\" src=\"https://flagcdn.com/w40/${cc.toLowerCase()}.png\" srcset=\"https://flagcdn.com/w80/${cc.toLowerCase()}.png 2x\" alt=\"\" loading=\"lazy\" onerror=\"this.remove()\">` : "");
   const ini = (n) => (n || "?").split(" ").map((x) => x[0]).slice(0, 2).join("").toUpperCase();
   const ph = (f, cls = "mm-ph") => `<span class="${cls}"><img src="${E(f?.photo_url || "")}" alt="" loading="lazy" onerror="this.remove()">${E(ini(f?.name))}</span>`;
   const skel = (n = 6) => Array.from({ length: n }, () => `<div class="sk sk-row"></div>`).join("");
@@ -26,7 +26,7 @@
   /* ---------- карты бойца в строке боя ---------- */
   function side(f, win, right) {
     if (!f) return `<div class="mm-side ${right ? "r" : ""}"><span class="mm-nm">—</span></div>`;
-    return `<a class="mm-side ${right ? "r" : ""} ${win === true ? "w" : win === false ? "l" : ""}" href="#/mma/fighter/${f.id}">${ph(f)}<span class="mm-who"><b>${E(f.name)}</b><small>${rec(f)}${f.country_code ? " · " + flag(f.country_code) : ""}</small></span></a>`;
+    return `<a class="mm-side ${right ? "r" : ""} ${win === true ? "w" : win === false ? "l" : ""}" href="#/mma/fighter/${f.id}">${ph(f)}<span class="mm-who"><b>${E(f.name)}</b><small>${rec(f)}${f.country_code ? flag(f.country_code) : ""}</small></span></a>`;
   }
   function fightRow(x, f1, f2) {
     const done = x.status === "FINISHED";
@@ -43,28 +43,57 @@
   }
 
   /* ---------- расписание ---------- */
+  const MON = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+  const isLive = (e) => e.status === "LIVE" || (e.status !== "FINISHED" && new Date(e.start_time) <= new Date());
+  const when = (d) => { const t = new Date(d), n = new Date(); const k = Math.round((new Date(t.getFullYear(), t.getMonth(), t.getDate()) - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 864e5); return k <= 0 ? "Сегодня" : k === 1 ? "Завтра" : "Через " + k + " дн."; };
+  const PLAYI = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>';
+
+  function hero(e, m, f1, f2, hasS) {
+    const live = isLive(e);
+    const fig = (f, r) => f ? `<a class="mm-hf ${r ? "r" : ""}" href="#/mma/fighter/${f.id}">${ph(f, "mm-ph hero")}<b>${E(f.name)}</b><small>${rec(f)}${f.country_code ? flag(f.country_code) : ""}</small></a>` : `<div class="mm-hf"></div>`;
+    return `<section class="mm-hero">
+      <div class="mm-hero-top"><span class="mm-chip-live ${live ? "on" : ""}">${live ? "LIVE" : when(e.start_time)}</span><span class="mm-hero-eb">Ближайший кард</span></div>
+      <h2>${E(e.name)}</h2>
+      <p class="mm-hero-meta"><b>${fmtD(e.start_time)} · ${fmtT(e.start_time)}</b><span>${E([e.venue, e.city, e.country].filter(Boolean).join(", "))}</span></p>
+      ${m ? `<div class="mm-hero-fr">${fig(f1, false)}<div class="mm-hero-vs"><i>VS</i><small>${m.is_title ? "Титульный бой" : "Главный бой"}</small><small>${E(wcRu(m.weight_class))}</small></div>${fig(f2, true)}</div>` : ""}
+      <a class="mm-hero-btn" href="#/mma/event/${e.id}"><span>${PLAYI}</span>Смотреть трансляцию</a>
+      <div class="mm-hero-ft">${e.cnt || 0} боёв · ${e.event_type === "numbered" ? "Номерной турнир" : "Fight Night"}${hasS ? " · есть трансляция" : ""}</div>
+    </section>`;
+  }
+  function evRow(e, m, f1, f2) {
+    const d = new Date(e.start_time), done = e.status === "FINISHED";
+    const vs = m ? `${E(f1?.name || "—")} <i>vs</i> ${E(f2?.name || "—")}` : "";
+    return `<a class="mm-row" href="#/mma/event/${e.id}">
+      <div class="mm-dt"><b>${d.getDate()}</b><span>${MON[d.getMonth()]}</span></div>
+      <div class="mm-rb"><b>${E(e.name)}</b><span>${vs}</span><small>${done ? "Завершён" : fmtT(e.start_time)} · ${E([e.city, e.country].filter(Boolean).join(", "))}</small></div>
+      <div class="mm-av">${m ? ph(f1, "mm-ph md") + ph(f2, "mm-ph md") : ""}</div>
+    </a>`;
+  }
+
   async function viewSchedule(params) {
     const tab = params.get("t") === "past" ? "past" : "up";
-    set(`<div class="wrap mm">${head("UFC", "Карды, бои и рейтинги")}${subnav("sched")}<div class="mm-tabs"><a href="#/mma" class="pill ${tab === "up" ? "on" : ""}">Ближайшие</a><a href="#/mma?t=past" class="pill ${tab === "past" ? "on" : ""}">Прошедшие</a></div><div id="mmL">${skel(6)}</div></div>`);
+    set(`<div class="wrap mm">${head("UFC", "Карды, бои и рейтинги")}${subnav("sched")}<div class="mm-tabs"><a href="#/mma" class="pill ${tab === "up" ? "on" : ""}">Ближайшие</a><a href="#/mma?t=past" class="pill ${tab === "past" ? "on" : ""}">Прошедшие</a></div><div id="mmL"><div class="sk mm-hero-sk"></div>${skel(4)}</div></div>`);
     const now = new Date().toISOString();
     let q = sb.from("mma_events").select("*");
-    q = tab === "up" ? q.gte("start_time", now).order("start_time", { ascending: true }).limit(20) : q.lt("start_time", now).order("start_time", { ascending: false }).limit(30);
+    q = tab === "up" ? q.gte("start_time", new Date(Date.now() - 6 * 36e5).toISOString()).order("start_time", { ascending: true }).limit(20) : q.lt("start_time", now).order("start_time", { ascending: false }).limit(30);
     const ev = await Q(q);
-    if (!ev.length) { document.getElementById("mmL").innerHTML = `<div class="card"><div class="empty-note">Карты не найдены.</div></div>`; return; }
+    const L = document.getElementById("mmL");
+    if (!ev.length) { L.innerHTML = `<div class="card"><div class="empty-note">Карты не найдены.</div></div>`; return; }
     const ids = ev.map((e) => e.id);
-    const fights = await Q(sb.from("mma_fights").select("*").in("event_id", ids).order("bout_order", { ascending: true }));
+    const [fights, srows] = await Promise.all([
+      Q(sb.from("mma_fights").select("*").in("event_id", ids).order("bout_order", { ascending: true })),
+      tab === "up" ? Q(sb.from("mma_streams").select("event_id").in("event_id", ids.map(String))).catch(() => []) : Promise.resolve([]),
+    ]);
     const fids = [...new Set(fights.flatMap((x) => [x.fighter1_id, x.fighter2_id]))];
     const fs = {}; for (let i = 0; i < fids.length; i += 150) (await Q(sb.from("mma_fighters").select(FSEL).in("id", fids.slice(i, i + 150)))).forEach((f) => (fs[f.id] = f));
     const main = {}; fights.forEach((x) => { const c = main[x.event_id]; if (!c || x.bout_order < c.bout_order) main[x.event_id] = x; });
     const cnt = {}; fights.forEach((x) => (cnt[x.event_id] = (cnt[x.event_id] || 0) + 1));
-    document.getElementById("mmL").innerHTML = ev.map((e) => {
-      const m = main[e.id], f1 = m && fs[m.fighter1_id], f2 = m && fs[m.fighter2_id];
-      const done = e.status === "FINISHED";
-      return `<a class="card mm-ev" href="#/mma/event/${e.id}">
-        <div class="mm-evh"><div><b>${E(e.name)}</b><small>${E([e.venue, e.city, e.country].filter(Boolean).join(", "))}</small></div><div class="mm-date">${fmtD(e.start_time)}<small>${done ? "Завершён" : fmtT(e.start_time)}</small></div></div>
-        ${m ? `<div class="mm-main">${side(f1, done && m.winner_id ? m.winner_id === m.fighter1_id : null, false).replace("<a ", "<span ").replace("</a>", "</span>")}<div class="mm-res"><b>${done ? E(METH[m.method] || "") : "vs"}</b><small>${m.is_title ? "Титул · " : ""}${E(wcRu(m.weight_class))}</small></div>${side(f2, done && m.winner_id ? m.winner_id === m.fighter2_id : null, true).replace("<a ", "<span ").replace("</a>", "</span>")}</div>` : ""}
-        <div class="mm-evf">${cnt[e.id] || 0} боёв${e.event_type === "numbered" ? " · Номерной" : " · Fight Night"}</div></a>`;
-    }).join("");
+    const hasS = new Set(srows.map((r) => String(r.event_id)));
+    const rows = (list) => list.map((e) => { const m = main[e.id]; return evRow(e, m, m && fs[m.fighter1_id], m && fs[m.fighter2_id]); }).join("");
+    if (tab === "up") {
+      const [h, ...rest] = ev; h.cnt = cnt[h.id]; const m = main[h.id];
+      L.innerHTML = hero(h, m, m && fs[m.fighter1_id], m && fs[m.fighter2_id], hasS.has(String(h.id))) + (rest.length ? `<h3 class="mm-sec">Дальше в календаре</h3><div class="card mm-list">${rows(rest)}</div>` : "");
+    } else L.innerHTML = `<div class="card mm-list">${rows(ev)}</div>`;
   }
 
   /* ---------- карт ---------- */

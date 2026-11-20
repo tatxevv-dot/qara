@@ -41,6 +41,12 @@
 .sx-badge i{font-style:normal;opacity:.55;font-weight:600}
 .sx-nm{position:relative;z-index:1;font-size:21px;line-height:1.08;font-weight:800;text-transform:uppercase;letter-spacing:-.01em;display:flex;flex-direction:column;gap:2px;overflow:hidden}
 .sx-nm span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sx-card.mma{background:linear-gradient(170deg,#c4122b 0%,#14080c 80%)}
+.sx-ufc{position:absolute;top:14px;left:14px;height:38px;padding:0 10px;border-radius:12px;background:#fff;color:#d20a0a;font-weight:900;font-size:15px;letter-spacing:.02em;display:grid;place-items:center;z-index:1}
+.sx-ph{position:relative;width:88px;height:88px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.16);display:grid;place-items:center;font-weight:800;font-size:24px;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 8px 18px rgba(0,0,0,.35);flex:none}
+.sx-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+.sx-cr2 .sx-ph+.sx-ph{margin-left:-16px}
+.sx-t .sx-ufcl{width:68px;height:68px;border-radius:50%;background:#fff;color:#d20a0a;display:grid;place-items:center;font-weight:900;font-size:18px}
 .sx-sub{position:relative;z-index:1;margin-top:12px;font-size:13px;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* карточка эфирной записи */
@@ -100,6 +106,18 @@
   const UP = (m) => LIVE(m) || m.status === "SCHEDULED";
   const nm = (t) => (t && (t.short_name || t.name)) || "—";
 
+  async function loadMma(from, to) {
+    const evs = (await run(sb.from("mma_events").select("*").gte("start_time", from).lte("start_time", to).order("start_time", { ascending: true }).limit(10))).filter((e) => e.status !== "FINISHED");
+    if (!evs.length) return [];
+    const ids = evs.map((e) => e.id);
+    const fights = await run(sb.from("mma_fights").select("event_id,bout_order,fighter1_id,fighter2_id,weight_class,is_title").in("event_id", ids).order("bout_order", { ascending: true }));
+    const main = {}; fights.forEach((x) => { const c = main[x.event_id]; if (!c || x.bout_order < c.bout_order) main[x.event_id] = x; });
+    const fids = [...new Set(Object.values(main).flatMap((x) => [x.fighter1_id, x.fighter2_id]))];
+    const fs = {}; if (fids.length) (await run(sb.from("mma_fighters").select("id,name,photo_url").in("id", fids))).forEach((f) => (fs[f.id] = f));
+    const has = new Set(); try { (await run(sb.from("mma_streams").select("event_id").in("event_id", ids.map(String)))).forEach((r) => has.add(String(r.event_id))); } catch (e) {}
+    return evs.map((e) => { const m = main[e.id] || {}; const live = e.status === "LIVE" || new Date(e.start_time) <= new Date();
+      return { _mma: true, id: e.id, name: e.name, utc_date: e.start_time, status: live ? "LIVE" : "SCHEDULED", f1: fs[m.fighter1_id], f2: fs[m.fighter2_id], wc: m.weight_class, _s: has.has(String(e.id)) }; });
+  }
   async function load(id) {
     const now = Date.now();
     const from = new Date(now - 4 * 3600e3).toISOString(), to = new Date(now + 10 * 864e5).toISOString(), past = new Date(now - 150 * 864e5).toISOString();
@@ -116,6 +134,7 @@
     } catch (e) { console.warn("[streams]", e.message); }
     up.forEach((m) => { m._s = has.has(String(m.id)); });
     
+    if (!id || id === "all") { try { up.push(...(await loadMma(from, to))); } catch (e) { console.warn("[streams mma]", e.message); } }
     up.sort((x, y) => (LIVE(y) - LIVE(x)) || (y._s - x._s) || (new Date(x.utc_date) - new Date(y.utc_date)));
     return { up, done };
   }
@@ -124,7 +143,18 @@
   const PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>';
   const dm = (d) => new Date(d).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
 
+  const ini = (n) => (n || "?").split(" ").map((x) => x[0]).slice(0, 2).join("").toUpperCase();
+  const fph = (f) => `<span class="sx-ph"><img src="${esc(f?.photo_url || "")}" alt="" loading="lazy" onerror="this.remove()">${esc(ini(f?.name))}</span>`;
+  function mmaCard(m) {
+    const live = LIVE(m), last = (f) => (f ? f.name.split(" ").slice(-1)[0] : "—");
+    const badge = live ? `<span class="sx-badge live">LIVE</span>` : `<span class="sx-badge">${dm(m.utc_date)} <i>·</i> ${fmtTime(m.utc_date)}</span>`;
+    return `<a class="sx-card mma" href="#/mma/event/${esc(m.id)}"><span class="sx-ufc">UFC</span>${m._s ? `<span class="sx-play">${PLAY}</span>` : ""}
+      <div class="sx-cr2">${fph(m.f1)}${fph(m.f2)}</div>${badge}
+      <div class="sx-nm"><span>${esc(last(m.f1))}</span><span>${esc(last(m.f2))}</span></div>
+      <div class="sx-sub">ММА. ${esc(m.name.split(":")[0])}</div></a>`;
+  }
   function card(m) {
+    if (m._mma) return mmaCard(m);
     const c = comp(m.competition_id), [c1, c2] = grad(m.competition_id), live = LIVE(m);
     const badge = live ? `<span class="sx-badge live">LIVE</span>` : `<span class="sx-badge">${dm(m.utc_date)} <i>·</i> ${fmtTime(m.utc_date)}</span>`;
     return `<a class="sx-card" style="--c1:${c1};--c2:${c2}" href="#/match/${esc(m.id)}">
@@ -181,7 +211,7 @@
           <div class="sx-sec" style="margin-top:14px">${head(esc(c.name) + ". Прямые трансляции")}${row(up, card, "Пока нет запланированных трансляций.")}</div>
           <div class="sx-sec">${head(esc(c.name) + ". Обзоры матчей")}${row(done, rec, "Обзоров пока нет.")}</div>`;
       } else {
-        h = `<div class="sx-sec" style="margin-top:20px">${head("Турниры")}<div class="sx-row">${COMPS.map(tile).join("")}</div></div>
+        h = `<div class="sx-sec" style="margin-top:20px">${head("Турниры")}<div class="sx-row"><a class="sx-t" style="--c1:#c4122b;--c2:#14080c" href="#/mma"><span class="sx-ufcl">UFC</span><b>UFC</b></a>${COMPS.map(tile).join("")}</div></div>
           <div class="sx-sec">${head("Все трансляции", "#/streams/all")}${row(up.slice(0, 14), card, "Пока нет запланированных трансляций.")}</div>
           <div class="sx-sec">${head("Обзоры матчей", "#/streams/all")}${row(done.slice(0, 14), rec, "Обзоров пока нет.")}</div>`;
       }
