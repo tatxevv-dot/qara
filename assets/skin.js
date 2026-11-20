@@ -31,7 +31,7 @@
     const last = (p) => p.player?.raw?.last || (p.player?.name || "").split(" ").slice(-1)[0] || "";
     const dot = (p, x, y) => {
       const { g, a, c } = cnt(p);
-      return `<a class="pl ${ratingCls(p.rating).replace("r-","rc-")}" href="#/player/${p.player_id}" style="left:${x}%;top:${y}%"><span class="ph"><span>${esc(p.raw?.jersey || "")}</span><img src="${headshot(p.player_id)}" alt="" loading="lazy" onerror="__phErr(this,'${p.player_id}')">`
+      return `<a class="pl ${ratingCls(p.rating).replace("r-","rc-")}" href="#/player/${p.player_id}" style="left:${x}%;top:${y}%"><span class="ph"><span>${esc(p.raw?.jersey || "")}</span><img src="${headshot(p.player_id)}" data-pid="${p.player_id}" alt="" loading="lazy" onerror="__phErr(this,'${p.player_id}')">`
         + (p.rating ? `<i class="rt rating ${ratingCls(p.rating)}">${Number(p.rating).toFixed(1)}</i>` : "")
         + (p.raw?.subOut ? `<i class="so"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></i>${p.raw.outM != null ? `<em class="sm">${p.raw.outM}'</em>` : ""}` : "")
         + (c ? `<i class="cd ${c === "red" ? "card-r" : "card-y"}"></i>` : "")

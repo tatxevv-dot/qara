@@ -29,12 +29,15 @@ const fmtTime = (d) => new Date(d).toLocaleTimeString("ru-RU", { hour: "2-digit"
 const fmtDate = (d, o = { day: "numeric", month: "short" }) => new Date(d).toLocaleDateString("ru-RU", o);
 const fmtDay = (d) => new Date(d).toLocaleDateString("ru-RU", { weekday: "short", day: "numeric", month: "short" });
 const initials = (n) => (n || "?").split(" ").map((x) => x[0]).slice(0, 2).join("").toUpperCase();
-const headshot = (id) => `https://a.espncdn.com/i/headshots/soccer/players/full/${id}.png`;
+const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+const fmUrl = (f) => `https://images.fotmob.com/image_resources/playerimages/${f}.png`;
+const headshot = (id) => (typeof FM !== "undefined" && FM[id]) ? fmUrl(FM[id]) : BLANK; /* только FotMob */
 const crest = (t, cls = "crest") => `<img class="${cls}" src="${esc(t?.crest_url || "")}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`;
 const FM = {}; // espn id -> fotmob id (запасной источник фото)
-window.__phErr = (im, id) => { const f = FM[id]; if (f && !im.dataset.fm) { im.dataset.fm = 1; im.src = `https://images.fotmob.com/image_resources/playerimages/${f}.png`; } else im.remove(); };
-const avatar = (id, name, cls = "avatar") => `<span class="${cls}"><img src="${headshot(id)}" alt="" loading="lazy" onerror="__phErr(this,'${id}')">${esc(initials(name))}</span>`;
-setTimeout(async () => { try { for (let o = 0; ; o += 1000) { const { data } = await sb.from("players").select("id,fotmob_id").not("fotmob_id", "is", null).range(o, o + 999); (data || []).forEach((r) => { FM[r.id] = r.fotmob_id; }); if (!data || data.length < 1000) break; } } catch (e) {} }, 0);
+window.__phErr = (im, id) => { im.remove(); };
+window.__fmFill = () => { document.querySelectorAll("img[data-pid]").forEach((im) => { const f = FM[im.dataset.pid]; if (f && im.src === BLANK) im.src = fmUrl(f); }); };
+const avatar = (id, name, cls = "avatar") => `<span class="${cls}"><img src="${headshot(id)}" data-pid="${id}" alt="" loading="lazy" onerror="__phErr(this,'${id}')">${esc(initials(name))}</span>`;
+setTimeout(async () => { try { for (let o = 0; ; o += 1000) { const { data } = await sb.from("players").select("id,fotmob_id").not("fotmob_id", "is", null).range(o, o + 999); (data || []).forEach((r) => { FM[r.id] = r.fotmob_id; }); if (!data || data.length < 1000) break; } } catch (e) {} window.__fmFill(); new MutationObserver(() => window.__fmFill()).observe(document.getElementById("app") || document.body, { childList: true, subtree: true }); }, 0);
 const ratingCls = (r) => (r == null ? "r-na" : r >= 8 ? "r-elite" : r >= 7 ? "r-good" : r >= 6 ? "r-ok" : "r-bad");
 const ratingChip = (r) => `<span class="rating ${ratingCls(r)}">${r == null ? "–" : Number(r).toFixed(1)}</span>`;
 const store = {
