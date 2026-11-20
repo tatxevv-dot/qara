@@ -3,7 +3,13 @@
   const app = document.getElementById("app"); if (!app) return;
   const cache = {}; // matchId -> { t: ts, teams: Set }
   const TTL = 60000;
-  const badge = (side) => { const i = document.createElement("i"); i.className = "rcb " + side; i.title = "Красная карточка"; return i; };
+  const put = (host, n) => {
+    const img = host.querySelector("img"); if (!img || !n) return;
+    let w = img.parentElement.classList.contains("rcw") ? img.parentElement : null;
+    if (!w) { w = document.createElement("span"); w.className = "rcw"; img.replaceWith(w); w.appendChild(img); }
+    const b = document.createElement("span"); b.className = "rcb"; b.title = "Красная карточка";
+    b.innerHTML = "<i></i>" + (n > 1 ? "<b>" + n + "</b>" : ""); w.appendChild(b);
+  };
   async function load(ids) {
     const need = ids.filter((id) => !cache[id] || Date.now() - cache[id].t > TTL);
     for (let i = 0; i < need.length; i += 60) {
@@ -13,9 +19,9 @@
           run(sb.from("match_events").select("match_id,team_id").eq("type", "red").in("match_id", part)),
           run(sb.from("matches").select("id,home_team_id,away_team_id").in("id", part)),
         ]);
-        for (const id of part) cache[id] = { t: Date.now(), home: false, away: false };
+        for (const id of part) cache[id] = { t: Date.now(), home: 0, away: 0 };
         const mm = {}; for (const m of ms) mm[String(m.id)] = m;
-        for (const e of ev) { const m = mm[String(e.match_id)], c = cache[String(e.match_id)] || cache[e.match_id]; if (!m || !c) continue; if (String(e.team_id) === String(m.home_team_id)) c.home = true; else if (String(e.team_id) === String(m.away_team_id)) c.away = true; }
+        for (const e of ev) { const m = mm[String(e.match_id)], c = cache[String(e.match_id)] || cache[e.match_id]; if (!m || !c) continue; if (String(e.team_id) === String(m.home_team_id)) c.home++; else if (String(e.team_id) === String(m.away_team_id)) c.away++; }
       } catch (e) { /* ignore */ }
     }
   }
@@ -32,14 +38,14 @@
       for (const r of rows) {
         r.dataset.rc = 1;
         const c = cache[r.getAttribute("href").slice(8).split("?")[0]]; if (!c) continue;
-        if (c.home) { const h = r.querySelector(".tm.h"); if (h) h.appendChild(badge("h")); }
-        if (c.away) { const a = r.querySelector(".tm:not(.h)"); if (a) a.insertBefore(badge("a"), a.firstChild); }
+        if (c.home) { const h = r.querySelector(".tm.h"); if (h) put(h, c.home); }
+        if (c.away) { const a = r.querySelector(".tm:not(.h)"); if (a) put(a, c.away); }
       }
       if (hdr && cache[hdr[1]]) {
         const c = cache[hdr[1]];
         const ts = [...app.querySelectorAll(".mh-team")].filter((t) => !t.dataset.rc);
         if (ts.length === 2) {
-          ts.forEach((t, i) => { t.dataset.rc = 1; if (i === 0 ? c.home : c.away) t.querySelector("img")?.insertAdjacentElement("afterend", badge("lg")); });
+          ts.forEach((t, i) => { t.dataset.rc = 1; put(t, i === 0 ? c.home : c.away); });
         }
       }
     } finally { busy = false; if (again) { again = false; schedule(); } }

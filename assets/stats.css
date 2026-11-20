@@ -97,7 +97,13 @@
 
 .card-r,.cd.card-r,.pl .cd.card-r,.bmk .cd.card-r{background:#e5222b!important}
 .card-y,.cd.card-y{background:#ffcc00!important}
-.rcb{display:inline-block;flex:none;width:9px;height:13px;border-radius:2px;background:#e5222b;box-shadow:0 0 0 1px rgba(0,0,0,.15);margin:0 5px}
-.rcb.lg{width:12px;height:17px;margin:0 0 0 -6px;align-self:flex-end;position:relative}
-.mh-team{position:relative}
-.mh-team .rcb.lg{position:absolute;top:2px;left:calc(50% + 26px);margin:0;width:12px;height:17px}
+.rcw{position:relative;display:inline-flex;flex:none;line-height:0}
+.rcb{position:absolute;top:-5px;right:-7px;display:flex;align-items:center;gap:1px;z-index:2;line-height:1}
+.rcb i{display:block;width:8px;height:11px;border-radius:2px;background:#e5222b;box-shadow:0 0 0 1px rgba(255,255,255,.9)}
+.rcb b{font-size:9px;font-weight:700;color:#e5222b}
+.mh-team .rcb{top:-2px;right:-10px}
+.mh-team .rcb i{width:10px;height:14px}
+.mh-team .rcb b{font-size:11px}
+.scorers .ball{opacity:1}
+.scorers .ball svg{width:18px;height:18px}
+.tl-row .ev svg.ib,.tl-row .ic svg{overflow:visible}
