@@ -112,3 +112,5 @@ rc-n{display:block;font-size:8px;font-weight:700;color:#e5222b;line-height:1}
 rc-c{display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;line-height:1}
 rc-c.n{width:10px;height:13px;font-size:8px}
 .mh-team rc-c.n{width:13px;height:17px;font-size:11px}
+rc-c,rc-c.n{width:10px;height:13px;font-size:8px;border-radius:2px}
+.mh-team rc-c,.mh-team rc-c.n{width:13px;height:17px;font-size:11px}
