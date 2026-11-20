@@ -115,3 +115,6 @@ rc-c.n{width:10px;height:13px;font-size:8px}
 rc-c,rc-c.n{width:10px;height:13px;font-size:8px;border-radius:2px}
 .mh-team rc-c,.mh-team rc-c.n{width:13px;height:17px;font-size:11px}
 rc-c,rc-c.n{box-shadow:none!important}
+
+/* === Тонкий шрифт везде === */
+*,*::before,*::after,b,strong,h1,h2,h3,h4,h5,h6,th,button,input,select,textarea{font-weight:300!important}
