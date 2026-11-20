@@ -334,3 +334,21 @@
   if (!appEl.firstElementChild) showPageSkeleton(); else stamp();
   if (appEl.querySelector(".skl-wrap,.skl-page")) loader.start();
 })();
+
+/* вкладки матча: класс .stuck когда прилипли к шапке */
+(function () {
+  let raf = 0;
+  const upd = () => {
+    raf = 0;
+    const el = document.querySelector(".localnav");
+    if (!el) return;
+    const g = document.querySelector(".gnav");
+    const top = g ? g.getBoundingClientRect().bottom : 56;
+    el.classList.toggle("stuck", el.getBoundingClientRect().top <= top + 1);
+  };
+  const req = () => { if (!raf) raf = requestAnimationFrame(upd); };
+  window.addEventListener("scroll", req, { passive: true });
+  window.addEventListener("resize", req);
+  window.addEventListener("hashchange", () => setTimeout(req, 50));
+  setTimeout(req, 300);
+})();

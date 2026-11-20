@@ -118,3 +118,9 @@ rc-c,rc-c.n{box-shadow:none!important}
 
 /* === Тонкий шрифт везде === */
 *,*::before,*::after,b,strong,h1,h2,h3,h4,h5,h6,th,button,input,select,textarea{font-weight:300!important}
+
+/* === Вкладки матча: плавно сливаются с шапкой при прилипании === */
+@media (max-width:640px){
+  .localnav{transition:margin .25s ease,padding .25s ease,border-radius .25s ease,box-shadow .25s ease}
+  .localnav.stuck{margin-left:calc(var(--gutter) * -1);margin-right:calc(var(--gutter) * -1);padding-left:calc(var(--gutter) + var(--space-2));padding-right:calc(var(--gutter) + var(--space-2));border-radius:0;border-bottom:1px solid var(--line-2)}
+}
