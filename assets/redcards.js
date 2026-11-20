@@ -8,7 +8,7 @@
     let w = img.parentElement.tagName === "RC-W" ? img.parentElement : null;
     if (!w) { w = document.createElement("rc-w"); img.replaceWith(w); w.appendChild(img); }
     const b = document.createElement("rc-b"); b.className = side; b.title = "Красная карточка";
-    b.innerHTML = n > 1 ? '<rc-c class="n">' + n + "</rc-c>" : "<rc-c></rc-c>"; w.appendChild(b);
+    b.innerHTML = "<rc-c class=\"n\">" + n + "</rc-c>";
   };
   async function load(ids) {
     const need = ids.filter((id) => !cache[id] || Date.now() - cache[id].t > TTL);
