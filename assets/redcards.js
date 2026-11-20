@@ -3,12 +3,12 @@
   const app = document.getElementById("app"); if (!app) return;
   const cache = {}; // matchId -> { t: ts, teams: Set }
   const TTL = 60000;
-  const put = (host, n) => {
+  const put = (host, n, side) => {
     const img = host.querySelector("img"); if (!img || !n) return;
-    let w = img.parentElement.classList.contains("rcw") ? img.parentElement : null;
-    if (!w) { w = document.createElement("span"); w.className = "rcw"; img.replaceWith(w); w.appendChild(img); }
-    const b = document.createElement("span"); b.className = "rcb"; b.title = "Красная карточка";
-    b.innerHTML = "<i></i>" + (n > 1 ? "<b>" + n + "</b>" : ""); w.appendChild(b);
+    let w = img.parentElement.tagName === "RC-W" ? img.parentElement : null;
+    if (!w) { w = document.createElement("rc-w"); img.replaceWith(w); w.appendChild(img); }
+    const b = document.createElement("rc-b"); b.className = side; b.title = "Красная карточка";
+    b.innerHTML = n > 1 ? '<rc-c class="n">' + n + "</rc-c>" : "<rc-c></rc-c>"; w.appendChild(b);
   };
   async function load(ids) {
     const need = ids.filter((id) => !cache[id] || Date.now() - cache[id].t > TTL);
@@ -38,14 +38,14 @@
       for (const r of rows) {
         r.dataset.rc = 1;
         const c = cache[r.getAttribute("href").slice(8).split("?")[0]]; if (!c) continue;
-        if (c.home) { const h = r.querySelector(".tm.h"); if (h) put(h, c.home); }
-        if (c.away) { const a = r.querySelector(".tm:not(.h)"); if (a) put(a, c.away); }
+        if (c.home) { const h = r.querySelector(".tm.h"); if (h) put(h, c.home, "l"); }
+        if (c.away) { const a = r.querySelector(".tm:not(.h)"); if (a) put(a, c.away, "r"); }
       }
       if (hdr && cache[hdr[1]]) {
         const c = cache[hdr[1]];
         const ts = [...app.querySelectorAll(".mh-team")].filter((t) => !t.dataset.rc);
         if (ts.length === 2) {
-          ts.forEach((t, i) => { t.dataset.rc = 1; put(t, i === 0 ? c.home : c.away); });
+          ts.forEach((t, i) => { t.dataset.rc = 1; put(t, i === 0 ? c.home : c.away, i === 0 ? "l" : "r"); });
         }
       }
     } finally { busy = false; if (again) { again = false; schedule(); } }
