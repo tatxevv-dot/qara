@@ -201,6 +201,7 @@ async function route() {
     else if (parts[0] === "team") await viewTeam(parts[1], parts[2] || "overview");
     else if (parts[0] === "player") await viewPlayer(parts[1]);
     else if (parts[0] === "match") await viewMatch(parts[1], parts[2] || "facts");
+    else if (parts[0] === "mma") await window.viewMma(parts.slice(1), params);
     else if (parts[0] === "leagues") viewLeagues();
     else if (parts[0] === "stats") await viewStats(params.get("c") || "ALL", params.get("s"));
     else if (parts[0] === "compare") await viewCompare(params);
