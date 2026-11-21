@@ -65,7 +65,7 @@
     const items = await Promise.all(pick.slice(0, 10).map(async (m) => ({ kind: "f", m, date: m.utc_date, live: LIVE(m) })));
     const all = [...items, ...mm].sort((a, b) => (b.live - a.live) || (new Date(a.date) - new Date(b.date))).slice(0, 10);
     if (!all.length) return "";
-    return `<section class="hr"><div class="hr-h"><h2>Скоро в эфире</h2><a href="#/streams">все ›</a></div><div class="hr-scroll">${all.map((i) => (i.kind === "m" ? mmaBanner(i) : footballBanner(i))).join("")}</div></section>`;
+    return `<section class="hr"><div class="hr-h"><h2></h2><a href="#/streams">все ›</a></div><div class="hr-scroll">${all.map((i) => (i.kind === "m" ? mmaBanner(i) : footballBanner(i))).join("")}</div></section>`;
   }
 
   /* ---------- вставка на главную ---------- */
@@ -79,7 +79,7 @@
     if (!isHome()) return;
     const main = document.querySelector("#app main");
     if (!main || main.querySelector(".hr")) return;
-    if (!html) main.insertAdjacentHTML("afterbegin", `<section class="hr hr-sk"><div class="hr-h"><h2>Скоро в эфире</h2></div><div class="hr-scroll"><i class="hr-card"></i><i class="hr-card"></i></div></section>`);
+    if (!html) main.insertAdjacentHTML("afterbegin", `<section class="hr hr-sk"><div class="hr-h"><h2></h2></div><div class="hr-scroll"><i class="hr-card"></i><i class="hr-card"></i></div></section>`);
     let h = ""; try { h = await build(); } catch (e) { console.warn("[hero]", e); }
     const m2 = document.querySelector("#app main"); if (!m2) return;
     const sk = m2.querySelector(".hr-sk"); if (sk) sk.remove();
