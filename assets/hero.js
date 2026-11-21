@@ -61,7 +61,7 @@
     const pick = fb.filter((m) => LIVE(m) || m._s);
     if (pick.length < 6) pick.push(...fb.filter((m) => !pick.includes(m)).slice(0, 6 - pick.length));
     const items = await Promise.all(pick.slice(0, 10).map(async (m) => ({ kind: "f", m, date: m.utc_date, live: LIVE(m) })));
-    const all = [...items, ...mm].sort((a, b) => (b.live - a.live) || (new Date(a.date) - new Date(b.date))).slice(0, 10);
+    const all = [...items, ...mm].sort((a, b) => (b.live - a.live) || ((b.kind === "m" && b.live) - (a.kind === "m" && a.live)) || (new Date(a.date) - new Date(b.date))).slice(0, 10);
     if (!all.length) return "";
     return `<section class="hr"><div class="hr-h"><h2>Скоро в эфире</h2><a href="#/streams">все ›</a></div><div class="hr-wrap"><div class="hr-scroll">${all.map((i) => (i.kind === "m" ? mmaBanner(i) : footballBanner(i))).join("")}</div></div></section>`;
   }
