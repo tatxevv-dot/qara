@@ -63,7 +63,36 @@
     const items = await Promise.all(pick.slice(0, 10).map(async (m) => ({ kind: "f", m, date: m.utc_date, live: LIVE(m) })));
     const all = [...items, ...mm].sort((a, b) => (b.live - a.live) || (new Date(a.date) - new Date(b.date))).slice(0, 10);
     if (!all.length) return "";
-    return `<section class="hr"><div class="hr-h"><h2>Скоро в эфире</h2><a href="#/streams">все ›</a></div><div class="hr-scroll">${all.map((i) => (i.kind === "m" ? mmaBanner(i) : footballBanner(i))).join("")}</div></section>`;
+    return `<section class="hr"><div class="hr-h"><h2>Скоро в эфире</h2><a href="#/streams">все ›</a></div><div class="hr-wrap"><div class="hr-scroll">${all.map((i) => (i.kind === "m" ? mmaBanner(i) : footballBanner(i))).join("")}</div></div></section>`;
+  }
+
+  /* ---------- автолистание + точки ---------- */
+  const DUR = 5; /* секунд на один баннер */
+  let curWrap = null;
+  document.addEventListener("visibilitychange", () => { if (curWrap) curWrap.classList.toggle("paused", document.hidden); });
+  function setup(sec) {
+    const sc = sec && sec.querySelector(".hr-scroll"), wrap = sec && sec.querySelector(".hr-wrap");
+    if (!sc || !wrap || sec.classList.contains("hr-sk")) return;
+    const cards = [...sc.children];
+    if (cards.length < 2) return;
+    const vis = Math.max(1, Math.round(sc.clientWidth / (cards[0].offsetWidth + 12)));
+    const pages = cards.length - vis + 1;
+    if (pages < 2) return;
+    const step = cards[1].offsetLeft - cards[0].offsetLeft;
+    wrap.insertAdjacentHTML("beforeend", `<div class="hr-dots">${'<i class="hr-d"><u></u></i>'.repeat(pages)}</div>`);
+    const dots = [...wrap.querySelectorAll(".hr-d")];
+    const still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (still) wrap.classList.add("static");
+    curWrap = wrap;
+    let idx = -1;
+    const set = (i) => { dots.forEach((d) => d.classList.remove("on")); void wrap.offsetWidth; idx = i; dots[i].classList.add("on"); };
+    const go = (i) => { sc.scrollTo({ left: i * step, behavior: "smooth" }); set(i); };
+    wrap.addEventListener("animationend", (e) => { if (e.target.closest && e.target.closest(".hr-d.on")) go((idx + 1) % pages); });
+    const pause = () => wrap.classList.add("paused"), play = () => wrap.classList.remove("paused");
+    ["touchstart", "pointerdown", "mouseenter"].forEach((n) => sc.addEventListener(n, pause, { passive: true }));
+    ["touchend", "touchcancel", "pointerup", "mouseleave"].forEach((n) => sc.addEventListener(n, play, { passive: true }));
+    let tt; sc.addEventListener("scroll", () => { clearTimeout(tt); tt = setTimeout(() => { const i = Math.min(pages - 1, Math.max(0, Math.round(sc.scrollLeft / step))); if (i !== idx) set(i); }, 120); }, { passive: true });
+    set(0);
   }
 
   /* ---------- вставка на главную ---------- */
@@ -77,12 +106,13 @@
     if (!isHome()) return;
     const main = document.querySelector("#app main");
     if (!main || main.querySelector(".hr")) return;
-    if (!html) main.insertAdjacentHTML("afterbegin", `<section class="hr hr-sk"><div class="hr-h"><h2>Скоро в эфире</h2></div><div class="hr-scroll"><i class="hr-card"></i><i class="hr-card"></i></div></section>`);
+    if (!html) main.insertAdjacentHTML("afterbegin", `<section class="hr hr-sk"><div class="hr-h"><h2>Скоро в эфире</h2></div><div class="hr-wrap"><div class="hr-scroll"><i class="hr-card"></i><i class="hr-card"></i></div></div></section>`);
     let h = ""; try { h = await build(); } catch (e) { console.warn("[hero]", e); }
     const m2 = document.querySelector("#app main"); if (!m2) return;
     const sk = m2.querySelector(".hr-sk"); if (sk) sk.remove();
     if (!h || !isHome() || m2.querySelector(".hr")) return;
     m2.insertAdjacentHTML("afterbegin", h);
+    setTimeout(() => setup(m2.querySelector(".hr")), 0);
   }
   let t; const kick = () => { clearTimeout(t); t = setTimeout(inject, 40); };
   new MutationObserver(kick).observe(document.querySelector("#app"), { childList: true, subtree: true });
@@ -98,6 +128,15 @@
 .hr-scroll::-webkit-scrollbar{display:none}
 .hr-card{position:relative;flex:0 0 100%;height:200px;border-radius:22px;overflow:hidden;scroll-snap-align:start;color:#fff;text-decoration:none;display:block;box-shadow:var(--shadow-xs)}
 @media(min-width:900px){.hr-card{flex-basis:calc(50% - 6px)}}
+.hr-wrap{position:relative}
+.hr-dots{position:absolute;left:0;right:0;bottom:12px;z-index:5;display:flex;justify-content:center;align-items:center;gap:5px;pointer-events:none}
+.hr-d{position:relative;display:block;width:6px;height:4px;border-radius:3px;background:rgba(255,255,255,.38);overflow:hidden;transition:width .35s cubic-bezier(.2,.8,.2,1)}
+.hr-d.on{width:30px}
+.hr-d u{position:absolute;inset:0;background:#fff;border-radius:3px;transform:scaleX(0);transform-origin:left;text-decoration:none}
+.hr-d.on u{animation:hrfill ${DUR}s linear forwards}
+@keyframes hrfill{to{transform:scaleX(1)}}
+.hr-wrap.paused .hr-d.on u{animation-play-state:paused}
+.hr-wrap.static .hr-d.on u{animation:none;transform:scaleX(1)}
 .hr-sk .hr-card{background:var(--fill);animation:hrp 1.2s ease-in-out infinite alternate}@keyframes hrp{to{opacity:.55}}
 .hr-card::before{content:"";position:absolute;inset:0;background:radial-gradient(70% 90% at 50% 40%,rgba(255,255,255,.16),transparent 70%);z-index:0}
 .hr-card.mma{background:linear-gradient(135deg,#c4122b 0%,#14080c 90%)}
@@ -112,7 +151,7 @@
 .hr-pl{position:absolute;bottom:0;height:100%;max-width:38%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4))}.hr-pl.l{left:2%}.hr-pl.r{right:2%}.hr-pl.flip{transform:scaleX(-1)}
 .hr-hs{position:absolute;bottom:0;width:30%;height:76%;object-fit:cover;object-position:top;border-radius:18px 18px 0 0;-webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent)}.hr-hs.l{left:5%}.hr-hs.r{right:5%}
 .hr-card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(to top,rgba(8,8,16,.9) 0%,rgba(8,8,16,.55) 55%,transparent 100%);z-index:2}
-.hr-info{position:absolute;left:14px;right:14px;bottom:12px;z-index:3;text-align:center}
+.hr-info{position:absolute;left:14px;right:14px;bottom:24px;z-index:3;text-align:center}
 .hr-b{display:inline-flex;gap:7px;padding:5px 11px;border-radius:11px;background:#ffd60a;color:#111;font-weight:800;font-size:13px;white-space:nowrap}.hr-b i{font-style:normal;opacity:.5}.hr-b.live{background:#e5173f;color:#fff;letter-spacing:.03em}
 .hr-nm{font-size:17px;line-height:1.15;font-weight:800;text-transform:uppercase;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hr-sub{margin-top:4px;font-size:12.5px;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
