@@ -13,28 +13,6 @@
   const norm = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>';
 
-  /* ---------- звёзды ---------- */
-  let STARS = null;
-  const BUCKET = SUPABASE_URL + "/storage/v1/object/public/stars/";
-  async function stars() {
-    if (STARS) return STARS;
-    try {
-      const { data, error } = await sb.from("team_stars").select("*").eq("active", true);
-      if (error) throw error;
-      STARS = (data || []).map((x) => ({ ...x, team: x.team_keys || [], src: BUCKET + encodeURI(x.file) }));
-    } catch (e) { console.warn("[hero] team_stars:", e.message || e); STARS = []; }
-    return STARS;
-  }
-  const imgOk = (src) => new Promise((ok) => { const i = new Image(); const t = setTimeout(() => ok(false), 2500); i.onload = () => { clearTimeout(t); ok(true); }; i.onerror = () => { clearTimeout(t); ok(false); }; i.src = src; });
-  const OKC = {};
-  const hit = (s, team) => (s.team_id && team?.id === s.team_id) || (s.team || []).some((k) => norm((team?.name || "") + " " + (team?.short_name || "")).includes(norm(k)));
-  async function starFor(team) {
-    const s = (STARS || []).find((x) => hit(x, team));
-    if (!s) return null;
-    if (!(s.src in OKC)) OKC[s.src] = await imgOk(s.src);
-    return OKC[s.src] ? s : null;
-  }
-
   /* ---------- данные ---------- */
   async function loadFootball() {
     const now = Date.now(), from = new Date(now - 4 * 36e5).toISOString(), to = new Date(now + 7 * 864e5).toISOString();
@@ -60,19 +38,15 @@
   /* ---------- баннеры ---------- */
   const badge = (it) => it.live ? `<span class="hr-b live">LIVE</span>` : `<span class="hr-b">${dm(it.date)} <i>·</i> ${fmtTime(it.date)}</span>`;
   const bigCrest = (t, side) => `<span class="hr-cr ${side}">${crest(t, "")}</span>`;
-  const star = (s, side) => `<img class="hr-pl ${side}${(side === "l" && s.face === "left") || (side === "r" && s.face === "right") ? " flip" : ""}" src="${esc(s.src)}" alt="">`;
 
   function footballBanner(it) {
     const m = it.m, c = comp(m.competition_id);
-    let [c1, c2] = grad(m.competition_id), bg;
-    if (it.s1?.color && it.s2?.color) bg = `linear-gradient(115deg,${it.s1.color} 0%,#0b0c18 50%,${it.s2.color} 100%)`;
-    else bg = `linear-gradient(170deg,${c1} 0%,${c2} 85%)`;
-    const art = `${it.s1 ? star(it.s1, "l") : bigCrest(m.home, "l")}${it.s2 ? star(it.s2, "r") : bigCrest(m.away, "r")}`;
-    const mini = it.s1 && it.s2 ? `<span class="hr-mini">${crest(m.home, "")}${crest(m.away, "")}</span>` : "";
+    const [c1, c2] = grad(m.competition_id), bg = `linear-gradient(170deg,${c1} 0%,${c2} 85%)`;
+    const art = `${bigCrest(m.home, "l")}${bigCrest(m.away, "r")}`;
     return `<a class="hr-card" style="background:${bg}" href="#/match/${esc(m.id)}">
       <img class="hr-lg" src="${esc(c.logo)}" alt="">${it.live || m._s ? `<span class="hr-play">${PLAY}</span>` : ""}
       <div class="hr-art">${art}</div>
-      <div class="hr-info"><div class="hr-row">${badge(it)}${mini}</div>
+      <div class="hr-info"><div class="hr-row">${badge(it)}</div>
       <div class="hr-nm">${esc(nm(m.home))} — ${esc(nm(m.away))}</div><div class="hr-sub">Футбол. ${esc(c.short)}</div></div></a>`;
   }
   function mmaBanner(it) {
@@ -85,16 +59,10 @@
   }
 
   async function make() {
-    await stars();
     const [fb, mm] = await Promise.all([loadFootball(), loadMma().catch(() => [])]);
     const pick = fb.filter((m) => LIVE(m) || m._s);
-    if (pick.length < 6) {
-      const rest = fb.filter((m) => !pick.includes(m));
-      const score = (m) => { return (STARS || []).filter((x) => hit(x, m.home) || hit(x, m.away)).length; };
-      rest.sort((a, b) => score(b) - score(a) || new Date(a.utc_date) - new Date(b.utc_date));
-      pick.push(...rest.slice(0, 6 - pick.length));
-    }
-    const items = await Promise.all(pick.slice(0, 10).map(async (m) => ({ kind: "f", m, date: m.utc_date, live: LIVE(m), s1: await starFor(m.home), s2: await starFor(m.away) })));
+    if (pick.length < 6) pick.push(...fb.filter((m) => !pick.includes(m)).slice(0, 6 - pick.length));
+    const items = await Promise.all(pick.slice(0, 10).map(async (m) => ({ kind: "f", m, date: m.utc_date, live: LIVE(m) })));
     const all = [...items, ...mm].sort((a, b) => (b.live - a.live) || (new Date(a.date) - new Date(b.date))).slice(0, 10);
     if (!all.length) return "";
     return `<section class="hr"><div class="hr-h"><h2>Скоро в эфире</h2><a href="#/streams">все ›</a></div><div class="hr-scroll">${all.map((i) => (i.kind === "m" ? mmaBanner(i) : footballBanner(i))).join("")}</div></section>`;
@@ -130,26 +98,26 @@
 .hr-h h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--text)}.hr-h a{color:var(--accent);font-weight:700;font-size:16px}
 .hr-scroll{display:flex;gap:12px;overflow-x:auto;padding:0 4px 4px;margin:0 -4px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .hr-scroll::-webkit-scrollbar{display:none}
-.hr-card{position:relative;flex:none;width:min(78vw,300px);height:430px;border-radius:26px;overflow:hidden;scroll-snap-align:start;color:#fff;text-decoration:none;display:block;box-shadow:var(--shadow-xs)}
+.hr-card{position:relative;flex:none;width:min(68vw,258px);height:372px;border-radius:24px;overflow:hidden;scroll-snap-align:start;color:#fff;text-decoration:none;display:block;box-shadow:var(--shadow-xs)}
 .hr-sk .hr-card{background:var(--fill);animation:hrp 1.2s ease-in-out infinite alternate}@keyframes hrp{to{opacity:.55}}
 .hr-card::before{content:"";position:absolute;inset:0;background:radial-gradient(90% 50% at 50% 30%,rgba(255,255,255,.18),transparent 70%);z-index:0}
 .hr-card.mma{background:linear-gradient(170deg,#c4122b 0%,#14080c 85%)}
-.hr-lg,.hr-ufc{position:absolute;top:16px;left:16px;z-index:3;height:40px;min-width:40px;box-sizing:border-box;border-radius:12px;background:#fff}
-.hr-lg{width:40px;padding:6px;object-fit:contain}.hr-ufc{padding:0 11px;display:grid;place-items:center;color:#d20a0a;font-weight:900;font-size:16px}
-.hr-play{position:absolute;top:18px;right:16px;z-index:3;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}.hr-play svg{width:13px;height:13px;fill:#fff}
-.hr-art{position:absolute;left:0;right:0;top:64px;height:290px;z-index:1}
+.hr-lg,.hr-ufc{position:absolute;top:13px;left:13px;z-index:3;height:36px;min-width:36px;box-sizing:border-box;border-radius:12px;background:#fff}
+.hr-lg{width:36px;padding:6px;object-fit:contain}.hr-ufc{padding:0 11px;display:grid;place-items:center;color:#d20a0a;font-weight:900;font-size:16px}
+.hr-play{position:absolute;top:14px;right:13px;z-index:3;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}.hr-play svg{width:13px;height:13px;fill:#fff}
+.hr-art{position:absolute;left:0;right:0;top:56px;height:240px;z-index:1}
 .hr-pl{position:absolute;bottom:0;height:100%;max-width:64%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 10px 18px rgba(0,0,0,.4))}
 .hr-pl.l{left:-3%}.hr-pl.r{right:-3%}.hr-pl.flip{transform:scaleX(-1)}
 .hr-hs{position:absolute;bottom:0;width:56%;height:88%;object-fit:cover;object-position:top;border-radius:22px 22px 0 0;-webkit-mask-image:linear-gradient(#000 62%,transparent);mask-image:linear-gradient(#000 62%,transparent)}
 .hr-hs.l{left:2%}.hr-hs.r{right:2%}
-.hr-cr{position:absolute;top:50%;margin-top:-62px;width:124px;height:124px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
-.hr-cr img{width:78px;height:78px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}.hr-cr.l{left:6%}.hr-cr.r{right:6%}
+.hr-cr{position:absolute;top:50%;margin-top:-56px;width:112px;height:112px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.hr-cr img{width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}.hr-cr.l{left:3%}.hr-cr.r{right:3%}
 .hr-card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to top,rgba(8,8,16,.94) 0%,rgba(8,8,16,.7) 45%,transparent 100%);z-index:2}
-.hr-info{position:absolute;left:18px;right:18px;bottom:18px;z-index:3}
+.hr-info{position:absolute;left:15px;right:15px;bottom:15px;z-index:3}
 .hr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .hr-b{display:inline-flex;gap:8px;padding:6px 12px;border-radius:12px;background:#ffd60a;color:#111;font-weight:800;font-size:14px}.hr-b i{font-style:normal;opacity:.5}.hr-b.live{background:#e5173f;color:#fff;letter-spacing:.03em}
 .hr-mini{display:flex;gap:6px}.hr-mini img{width:30px;height:30px;object-fit:contain}
-.hr-nm{font-size:23px;line-height:1.1;font-weight:800;text-transform:uppercase;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hr-nm{font-size:20px;line-height:1.1;font-weight:800;text-transform:uppercase;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .hr-sub{margin-top:10px;font-size:14px;opacity:.78}
 `;
   document.head.appendChild(st);
