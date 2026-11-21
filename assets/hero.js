@@ -67,7 +67,7 @@
   }
 
   /* ---------- автолистание + точки ---------- */
-  const DUR = 5; /* секунд на один баннер */
+  const DUR = 13; /* секунд на один баннер */
   let curWrap = null;
   document.addEventListener("visibilitychange", () => { if (curWrap) curWrap.classList.toggle("paused", document.hidden); });
   function setup(sec) {
