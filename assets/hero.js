@@ -15,20 +15,24 @@
 
   /* ---------- звёзды ---------- */
   let STARS = null;
+  const BUCKET = SUPABASE_URL + "/storage/v1/object/public/stars/";
   async function stars() {
     if (STARS) return STARS;
-    try { const r = await fetch("assets/stars/manifest.json?v=1"); STARS = r.ok ? await r.json() : []; } catch (e) { STARS = []; }
+    try {
+      const { data, error } = await sb.from("team_stars").select("*").eq("active", true);
+      if (error) throw error;
+      STARS = (data || []).map((x) => ({ ...x, team: x.team_keys || [], src: BUCKET + encodeURI(x.file) }));
+    } catch (e) { console.warn("[hero] team_stars:", e.message || e); STARS = []; }
     return STARS;
   }
   const imgOk = (src) => new Promise((ok) => { const i = new Image(); const t = setTimeout(() => ok(false), 2500); i.onload = () => { clearTimeout(t); ok(true); }; i.onerror = () => { clearTimeout(t); ok(false); }; i.src = src; });
   const OKC = {};
+  const hit = (s, team) => (s.team_id && team?.id === s.team_id) || (s.team || []).some((k) => norm((team?.name || "") + " " + (team?.short_name || "")).includes(norm(k)));
   async function starFor(team) {
-    const n = norm((team?.name || "") + " " + (team?.short_name || ""));
-    const s = (STARS || []).find((x) => (x.team || []).some((k) => n.includes(norm(k))));
+    const s = (STARS || []).find((x) => hit(x, team));
     if (!s) return null;
-    const src = "assets/stars/" + s.file;
-    if (!(src in OKC)) OKC[src] = await imgOk(src);
-    return OKC[src] ? { ...s, src } : null;
+    if (!(s.src in OKC)) OKC[s.src] = await imgOk(s.src);
+    return OKC[s.src] ? s : null;
   }
 
   /* ---------- данные ---------- */
@@ -86,7 +90,7 @@
     const pick = fb.filter((m) => LIVE(m) || m._s);
     if (pick.length < 6) {
       const rest = fb.filter((m) => !pick.includes(m));
-      const score = (m) => { const n = norm((m.home?.name || "") + (m.away?.name || "")); return (STARS || []).filter((s) => (s.team || []).some((k) => n.includes(norm(k)))).length; };
+      const score = (m) => { return (STARS || []).filter((x) => hit(x, m.home) || hit(x, m.away)).length; };
       rest.sort((a, b) => score(b) - score(a) || new Date(a.utc_date) - new Date(b.utc_date));
       pick.push(...rest.slice(0, 6 - pick.length));
     }
