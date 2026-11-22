@@ -35,25 +35,33 @@
     return evs.map((e) => { const m = main[e.id] || {}; return { kind: "m", e, f1: fs[m.fighter1_id], f2: fs[m.fighter2_id], date: e.start_time, live: e.status === "LIVE" || new Date(e.start_time) <= new Date(), _s: has.has(String(e.id)) }; });
   }
 
-  /* ---------- баннеры ---------- */
-  const badge = (it) => it.live ? `<span class="hr-b live">LIVE</span>` : `<span class="hr-b">${dm(it.date)} <i>·</i> ${fmtTime(it.date)}</span>`;
-  const bigCrest = (t, side) => `<span class="hr-cr ${side}">${crest(t, "")}</span>`;
+  /* ---------- баннеры: плоский фирменный стиль лиг ---------- */
+  const svgUri = (x) => `url("data:image/svg+xml,${encodeURIComponent(x)}")`;
+  const PL_SVG = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 225' preserveAspectRatio='xMidYMid slice'><path d='M0 60 C90 20 170 120 260 80 S380 20 400 40 L400 120 C330 100 270 170 190 150 S60 90 0 130Z' fill='#4b1c71' opacity='.9'/><path d='M0 150 C80 120 170 210 270 170 S370 130 400 150 L400 225 L0 225Z' fill='#5c2788' opacity='.75'/><path d='M150 0 C220 50 300 20 400 -10 L400 0Z' fill='#6a35a0'/></svg>`;
+  const CL_SVG = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 225' preserveAspectRatio='xMidYMid slice'><g fill='none' stroke-width='3' stroke-linecap='round'><path d='M330 0 C340 40 380 60 400 70' stroke='#4be3ff'/><path d='M345 0 C355 34 385 50 400 56' stroke='#9b5cff'/><path d='M360 0 C368 28 390 40 400 44' stroke='#ffe14a'/><path d='M0 170 C40 175 70 200 90 225' stroke='#4be3ff'/><path d='M0 185 C30 190 55 208 70 225' stroke='#9b5cff'/><path d='M0 200 C20 204 40 216 50 225' stroke='#4bff9a'/></g></svg>`;
+  const SKIN = {
+    PL: { bg: `${svgUri(PL_SVG)} center/cover no-repeat, #3a1458`, logo: "w" },
+    PD: { bg: "#ee5b4d", logo: "w" },
+    BL1: { bg: "linear-gradient(90deg,#b3141f 0%,#d92b1c 100%)", logo: "w" },
+    FL1: { bg: "#3b74f6", logo: "w" },
+    SA: { bg: "linear-gradient(180deg,#8cc7da 0%,#47b8cf 52%,#a6ecee 100%)", logo: "o", line: "#0b2b3b" },
+    CL: { bg: `${svgUri(CL_SVG)} center/cover no-repeat, #0a1450`, logo: "w" },
+    UFC: { bg: "#e4112b", logo: "w" },
+  };
+  const skin = (id) => SKIN[id] || { bg: "#20233a", logo: "w" };
+  const dayLbl = (d) => { const t = new Date(d), n = new Date(); const k = Math.round((new Date(t.getFullYear(), t.getMonth(), t.getDate()) - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 864e5); return (k === 0 ? "Сегодня" : k === 1 ? "Завтра" : dm(d)) + " · " + fmtTime(d); };
+  const caption = (live, title, sub) => `<div class="hr-cap"><div class="hr-nm">${live ? '<span class="hr-live">LIVE</span>' : ""}<span>${esc(title)}</span></div><div class="hr-sub">${esc(sub)}</div></div>`;
 
   function footballBanner(it) {
-    const m = it.m, c = comp(m.competition_id);
-    const [c1, c2] = grad(m.competition_id), bg = `linear-gradient(170deg,${c1} 0%,${c2} 85%)`;
-    const art = `${bigCrest(m.home, "l")}${bigCrest(m.away, "r")}`;
-    return `<a class="hr-card" style="background:${bg}" href="#/match/${esc(m.id)}">
-      <img class="hr-lg" src="${esc(c.logo)}" alt="">${it.live || m._s ? `<span class="hr-play">${PLAY}</span>` : ""}
-      <div class="hr-art">${art}<div class="hr-mid"><b>VS</b>${badge(it)}</div></div>
-      <div class="hr-info"><div class="hr-nm">${esc(nm(m.home))} — ${esc(nm(m.away))}</div><div class="hr-sub">Футбол. ${esc(c.short)}</div></div></a>`;
+    const m = it.m, c = comp(m.competition_id), k = skin(m.competition_id);
+    const lg = c.logo ? `<img class="hr-lg ${k.logo}" src="${esc(c.logo)}" alt="">` : "";
+    return `<a class="hr-item" href="#/match/${esc(m.id)}"><div class="hr-card k-${esc(m.competition_id)}"${k.line ? ` style="--ln:${k.line}"` : ""}>${lg}<i class="hr-ln"></i><span class="hr-tm l">${crest(m.home, "")}</span><span class="hr-tm r">${crest(m.away, "")}</span></div>${caption(it.live, nm(m.home) + " — " + nm(m.away), (it.live ? "" : dayLbl(it.date) + " · ") + c.short)}</a>`;
   }
   function mmaBanner(it) {
-    const { e, f1, f2 } = it, last = (f) => (f ? f.name.split(" ").slice(-1)[0] : "—");
-    const fig = (f, side) => f?.body_url ? `<img class="hr-pl ${side}" src="${esc(f.body_url)}" alt="">` : `<img class="hr-hs ${side}" src="${esc(f?.photo_url || "")}" alt="" onerror="this.style.visibility='hidden'">`;
-    return `<a class="hr-card mma" href="#/mma/event/${esc(e.id)}"><span class="hr-ufc">UFC</span>${it._s || it.live ? `<span class="hr-play">${PLAY}</span>` : ""}
-      <div class="hr-art">${fig(f1, "l")}${fig(f2, "r")}<div class="hr-mid"><b>VS</b>${badge(it)}</div></div>
-      <div class="hr-info"><div class="hr-nm">${esc(last(f1))} — ${esc(last(f2))}</div><div class="hr-sub">ММА. ${esc(e.name.split(":")[0])}</div></div></a>`;
+    const { e, f1, f2 } = it, label = e.name.split(":")[0].trim(), last = (f) => (f ? f.name.split(" ").slice(-1)[0] : "—");
+    const mark = /fight night/i.test(label) ? `<div class="hr-ufcl"><b>UFC</b><span>FIGHT<i>NIGHT</i></span></div>` : `<div class="hr-ufcl"><b>${esc(label)}</b></div>`;
+    const fig = (f, side) => `<span class="hr-tm fg ${side}">${f?.body_url ? `<img class="hr-bd" src="${esc(f.body_url)}" alt="">` : `<img class="hr-hd" src="${esc(f?.photo_url || "")}" alt="" onerror="this.style.visibility='hidden'">`}</span>`;
+    return `<a class="hr-item" href="#/mma/event/${esc(e.id)}"><div class="hr-card k-UFC">${mark}<i class="hr-ln"></i>${fig(f1, "l")}${fig(f2, "r")}</div>${caption(it.live, last(f1) + " — " + last(f2), (it.live ? "" : dayLbl(it.date) + " · ") + label)}</a>`;
   }
 
   async function make() {
@@ -61,13 +69,13 @@
     const pick = fb.filter((m) => LIVE(m) || m._s);
     if (pick.length < 6) pick.push(...fb.filter((m) => !pick.includes(m)).slice(0, 6 - pick.length));
     const items = await Promise.all(pick.slice(0, 10).map(async (m) => ({ kind: "f", m, date: m.utc_date, live: LIVE(m) })));
-    const all = [...items, ...mm].sort((a, b) => (b.live - a.live) || ((b.kind === "m" && b.live) - (a.kind === "m" && a.live)) || (new Date(a.date) - new Date(b.date))).slice(0, 10);
+    const all = [...items, ...mm].sort((a, b) => (b.live - a.live) || (new Date(a.date) - new Date(b.date))).slice(0, 10);
     if (!all.length) return "";
     return `<section class="hr"><div class="hr-h"><h2>Скоро в эфире</h2><a href="#/streams">все ›</a></div><div class="hr-wrap"><div class="hr-scroll">${all.map((i) => (i.kind === "m" ? mmaBanner(i) : footballBanner(i))).join("")}</div></div></section>`;
   }
 
   /* ---------- автолистание + точки ---------- */
-  const DUR = 13; /* секунд на один баннер */
+  const DUR = 5; /* секунд на один баннер */
   let curWrap = null;
   document.addEventListener("visibilitychange", () => { if (curWrap) curWrap.classList.toggle("paused", document.hidden); });
   function setup(sec) {
@@ -106,7 +114,7 @@
     if (!isHome()) return;
     const main = document.querySelector("#app main");
     if (!main || main.querySelector(".hr")) return;
-    if (!html) main.insertAdjacentHTML("afterbegin", `<section class="hr hr-sk"><div class="hr-h"><h2>Скоро в эфире</h2></div><div class="hr-wrap"><div class="hr-scroll"><i class="hr-card"></i><i class="hr-card"></i></div></div></section>`);
+    if (!html) main.insertAdjacentHTML("afterbegin", `<section class="hr hr-sk"><div class="hr-h"><h2>Скоро в эфире</h2></div><div class="hr-wrap"><div class="hr-scroll"><div class="hr-item"><div class="hr-card"></div></div><div class="hr-item"><div class="hr-card"></div></div></div></div></section>`);
     let h = ""; try { h = await build(); } catch (e) { console.warn("[hero]", e); }
     const m2 = document.querySelector("#app main"); if (!m2) return;
     const sk = m2.querySelector(".hr-sk"); if (sk) sk.remove();
@@ -120,41 +128,44 @@
 
   /* ---------- стили ---------- */
   const st = document.createElement("style");
+  const SKIN_CSS = Object.entries(SKIN).map(([k, v]) => `.hr-card.k-${k}{background:${v.bg}}`).join("\n");
   st.textContent = `
 .hr{margin:0 0 18px}
 .hr-h{display:flex;align-items:baseline;justify-content:space-between;padding:0 4px;margin-bottom:12px}
 .hr-h h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--text)}.hr-h a{color:var(--accent);font-weight:700;font-size:16px}
+.hr-wrap{position:relative}
 .hr-scroll{display:flex;gap:12px;overflow-x:auto;padding:0 4px 4px;margin:0 -4px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .hr-scroll::-webkit-scrollbar{display:none}
-.hr-card{position:relative;flex:0 0 100%;height:200px;border-radius:22px;overflow:hidden;scroll-snap-align:start;color:#fff;text-decoration:none;display:block;box-shadow:var(--shadow-xs)}
-@media(min-width:900px){.hr-card{flex-basis:calc(50% - 6px)}}
-.hr-wrap{position:relative}
-.hr-dots{position:absolute;left:0;right:0;bottom:12px;z-index:5;display:flex;justify-content:center;align-items:center;gap:5px;pointer-events:none}
-.hr-d{position:relative;display:block;width:6px;height:4px;border-radius:3px;background:rgba(255,255,255,.38);overflow:hidden;transition:width .35s cubic-bezier(.2,.8,.2,1)}
+.hr-item{flex:0 0 100%;min-width:0;scroll-snap-align:start;display:block;color:var(--text);text-decoration:none}
+@media(min-width:900px){.hr-item{flex-basis:calc(50% - 6px)}}
+.hr-card{position:relative;aspect-ratio:1.78/1;border-radius:22px;overflow:hidden;color:#fff;background:#20233a}
+${SKIN_CSS}
+.hr-sk .hr-card{background:var(--fill);animation:hrp 1.2s ease-in-out infinite alternate}@keyframes hrp{to{opacity:.55}}
+.hr-lg{position:absolute;left:50%;top:9%;height:19%;max-width:40%;transform:translateX(-50%);object-fit:contain}
+.hr-lg.w{filter:brightness(0) invert(1)}
+.hr-ln{position:absolute;left:50%;top:38%;height:50%;width:2px;margin-left:-1px;border-radius:2px;background:var(--ln,#fff)}
+.hr-tm{position:absolute;top:38%;height:52%;width:34%;display:flex;align-items:center;justify-content:center}
+.hr-tm.l{left:8%}.hr-tm.r{right:8%}
+.hr-tm:not(.fg) img{width:100%!important;height:100%!important;object-fit:contain;filter:none}
+.hr-tm.fg{top:30%;height:70%;align-items:flex-end}
+.hr-bd{width:100%;height:100%;object-fit:contain;object-position:bottom}
+.hr-hd{height:68%;aspect-ratio:1;border-radius:50%;object-fit:cover;object-position:top;box-shadow:0 0 0 2px #fff;margin-bottom:12%;background:rgba(255,255,255,.2)}
+.hr-ufcl{position:absolute;left:50%;top:8%;transform:translateX(-50%);text-align:center;line-height:1;font-style:italic;color:#fff;white-space:nowrap}
+.hr-ufcl b{display:block;font-size:30px;font-weight:900;letter-spacing:-.03em}
+.hr-ufcl span{display:block;margin-top:-1px;font-size:12px;font-weight:800;letter-spacing:.05em}.hr-ufcl i{font-weight:300}
+.hr-cap{padding:10px 4px 0}
+.hr-nm{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden}
+.hr-nm span:last-child{overflow:hidden;text-overflow:ellipsis}
+.hr-live{flex:none;background:#e5173f;color:#fff;font-size:11px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:6px}
+.hr-sub{margin-top:2px;font-size:13px;color:var(--text-3)}
+.hr-dots{display:flex;justify-content:center;align-items:center;gap:5px;margin-top:12px;pointer-events:none}
+.hr-d{position:relative;display:block;width:6px;height:4px;border-radius:3px;background:rgba(128,128,128,.35);overflow:hidden;transition:width .35s cubic-bezier(.2,.8,.2,1)}
 .hr-d.on{width:30px}
-.hr-d u{position:absolute;inset:0;background:#fff;border-radius:3px;transform:scaleX(0);transform-origin:left;text-decoration:none}
+.hr-d u{position:absolute;inset:0;background:var(--text);border-radius:3px;transform:scaleX(0);transform-origin:left;text-decoration:none}
 .hr-d.on u{animation:hrfill ${DUR}s linear forwards}
 @keyframes hrfill{to{transform:scaleX(1)}}
 .hr-wrap.paused .hr-d.on u{animation-play-state:paused}
 .hr-wrap.static .hr-d.on u{animation:none;transform:scaleX(1)}
-.hr-sk .hr-card{background:var(--fill);animation:hrp 1.2s ease-in-out infinite alternate}@keyframes hrp{to{opacity:.55}}
-.hr-card::before{content:"";position:absolute;inset:0;background:radial-gradient(70% 90% at 50% 40%,rgba(255,255,255,.16),transparent 70%);z-index:0}
-.hr-card.mma{background:linear-gradient(135deg,#c4122b 0%,#14080c 90%)}
-.hr-lg,.hr-ufc{position:absolute;top:12px;left:12px;z-index:3;height:34px;min-width:34px;box-sizing:border-box;border-radius:11px;background:#fff}
-.hr-lg{width:34px;padding:5px;object-fit:contain}.hr-ufc{padding:0 10px;display:grid;place-items:center;color:#d20a0a;font-weight:900;font-size:14px}
-.hr-play{position:absolute;top:12px;right:12px;z-index:3;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}.hr-play svg{width:12px;height:12px;fill:#fff}
-.hr-art{position:absolute;inset:0;z-index:1}
-.hr-cr{position:absolute;top:46px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
-.hr-cr img{width:60px;height:60px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}.hr-cr.l{left:7%}.hr-cr.r{right:7%}
-.hr-mid{position:absolute;left:50%;top:62px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px}
-.hr-mid b{font-size:20px;font-weight:800;letter-spacing:.06em;opacity:.8}
-.hr-pl{position:absolute;bottom:0;height:100%;max-width:38%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4))}.hr-pl.l{left:2%}.hr-pl.r{right:2%}.hr-pl.flip{transform:scaleX(-1)}
-.hr-hs{position:absolute;bottom:0;width:30%;height:76%;object-fit:cover;object-position:top;border-radius:18px 18px 0 0;-webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent)}.hr-hs.l{left:5%}.hr-hs.r{right:5%}
-.hr-card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(to top,rgba(8,8,16,.9) 0%,rgba(8,8,16,.55) 55%,transparent 100%);z-index:2}
-.hr-info{position:absolute;left:14px;right:14px;bottom:24px;z-index:3;text-align:center}
-.hr-b{display:inline-flex;gap:7px;padding:5px 11px;border-radius:11px;background:#ffd60a;color:#111;font-weight:800;font-size:13px;white-space:nowrap}.hr-b i{font-style:normal;opacity:.5}.hr-b.live{background:#e5173f;color:#fff;letter-spacing:.03em}
-.hr-nm{font-size:17px;line-height:1.15;font-weight:800;text-transform:uppercase;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hr-sub{margin-top:4px;font-size:12.5px;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 `;
   document.head.appendChild(st);
 })();
