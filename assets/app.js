@@ -189,6 +189,17 @@ const posRu = (p) => POS_RU[posGroup(p)];
 let refreshTimer = null, charts = [];
 function killCharts() { charts.forEach((c) => c.destroy()); charts = []; }
 async function route() {
+  /* переключение вкладки внутри того же матча: страница и плеер не перерисовываются, меняется только содержимое вкладки */
+  const mm = location.hash.match(/^#\/match\/([^/?]+)\/?([^/?]*)/), cm = document.getElementById("mcontent");
+  if (mm && cm && cm.dataset.mid === decodeURIComponent(mm[1])) {
+    const tab = mm[2] || "facts";
+    clearInterval(refreshTimer); killCharts(); closeFly();
+    cm.style.transition = "opacity .15s"; cm.style.opacity = ".5";
+    try { await softMatch(decodeURIComponent(mm[1]), tab, true); } catch (e) { console.warn("[tab]", e); }
+    cm.style.opacity = "";
+    const on = document.querySelector("#app .localnav .tabs a.on");
+    if (on && (on.getAttribute("href") || "").endsWith("/" + tab)) { const pl = document.getElementById("polls"); if (pl && tab !== "facts") pl.innerHTML = ""; return; }
+  }
   clearInterval(refreshTimer); killCharts(); closeFly(); document.documentElement.style.removeProperty("--home"); document.documentElement.style.removeProperty("--away");
   const [path, qs] = location.hash.replace(/^#\/?/, "").split("?");
   const parts = path.split("/").filter(Boolean);
@@ -743,14 +754,15 @@ function applyMatchColors(m) {
 /* Мягкое обновление матча: страница не перерисовывается, подменяются только шапка и содержимое вкладки.
    Всё остальное (в т.ч. плеер трансляции) остаётся нетронутым, скролл не сбрасывается. */
 let softBusy = false;
-async function softMatch(id, tab) {
+async function softMatch(id, tab, force) {
+  if (force) for (let i = 0; softBusy && i < 60; i++) await new Promise((r) => setTimeout(r, 50));
   const live = $("#app"), cont = $("#mcontent"), wrap = live && $(".wrap", live), card = wrap && $(".card", wrap), nav = wrap && $(".localnav", wrap);
-  if (softBusy || !cont || !card || !nav || document.hidden) return;
+  if (softBusy || !cont || !card || !nav || (document.hidden && !force)) return;
   softBusy = true;
   const tmp = document.createElement("div"); tmp.id = "app"; tmp.style.cssText = "position:fixed;left:-99999px;top:0;width:900px;visibility:hidden";
   live.id = "app_live"; cont.id = "mcontent_live"; document.body.appendChild(tmp);
   try {
-    memo.clear(); killCharts();
+    if (!force) memo.clear(); killCharts();
     await viewMatch(id, tab);
     const nw = $(".wrap", tmp);
     if (nw && location.hash.startsWith("#/match/" + id) && cont.isConnected) {
@@ -789,7 +801,7 @@ async function viewMatch(id, tab) {
       <div class="mh-info">${m.raw?.venue ? `<span>${ICON.pin}${esc(m.raw.venue)}${m.raw.city ? ", " + esc(m.raw.city) : ""}</span>` : ""}${m.raw?.attendance ? `<span>${ICON.users}${Number(m.raw.attendance).toLocaleString("ru-RU")}</span>` : ""}${m.raw?.referee ? `<span>${ICON.whistle}${esc(m.raw.referee)}</span>` : ""}${H && A ? `<span><b>xG</b>&nbsp;${num(H.xg, 2)} – ${num(A.xg, 2)}</span>` : ""}</div>
     </div></div>
     ${localnav(`${crest(m.home, "crest sm")}<span class="t">${esc(m.home.short_name)} ${played ? m.home_goals + "–" + m.away_goals : "–"} ${esc(m.away.short_name)}</span>${crest(m.away, "crest sm")}`, tabs, tab, `#/match/${id}`)}
-    <div id="mcontent"></div><div id="polls"></div></div>`;
+    <div id="mcontent" data-mid="${id}"></div><div id="polls"></div></div>`;
   $(".localnav").style.marginTop = "16px";
   const box = $("#mcontent");
   const ctx = { m, ts, pms, evs, H, A };
