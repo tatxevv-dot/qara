@@ -320,6 +320,9 @@
 
   window.addEventListener("hashchange", safe(function () {
     setActive();
+    /* вкладка того же матча: страницу и плеер не трогаем (app.js меняет только содержимое вкладки) */
+    var mm = location.hash.match(/^#\/match\/([^/?]+)/), cm = appEl.querySelector("[data-mid]");
+    if (mm && cm && cm.getAttribute("data-mid") === decodeURIComponent(mm[1])) return;
     loader.start();
     if (appEl.dataset.hash !== location.hash) showPageSkeleton();
   }));
