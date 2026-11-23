@@ -246,11 +246,11 @@ function matchRow(m, opts = {}) {
   const fav = favMatches().includes(m.id);
   const mid = played ? `<span class="sc">${m.home_goals} – ${m.away_goals}</span>` : `<span class="tm-time">${m.status === "SCHEDULED" ? fmtTime(m.utc_date) : "–"}</span>`;
   const st = played || live ? statusLabel(m) : opts.showDate ? fmtDate(m.utc_date) : "";
-  const sc = played ? `<span class="sc"><b>${m.home_goals}</b><b>${m.away_goals}</b></span>` : `<span class="tm-time">${m.status === "SCHEDULED" ? fmtTime(m.utc_date) : "–"}</span>`;
   return `<a class="mrow ${live ? "live" : ""}" href="#/match/${m.id}">
+    <div class="tm h ${hw ? "win" : ""}"><span>${esc(m.home?.short_name || m.home?.name)}</span>${crest(m.home)}</div>
+    <div class="mid">${mid}<div class="st">${esc(st)}</div></div>
+    <div class="tm ${aw ? "win" : ""}">${crest(m.away)}<span>${esc(m.away?.short_name || m.away?.name)}</span></div>
     <button class="fav ${fav ? "on" : ""}" data-fav="${m.id}" aria-label="Отслеживать матч">${fav ? ICON.star : ICON.starO}</button>
-    <div class="tms"><div class="tm h ${hw ? "win" : ""}">${crest(m.home)}<span>${esc(m.home?.short_name || m.home?.name)}</span></div><div class="tm ${aw ? "win" : ""}">${crest(m.away)}<span>${esc(m.away?.short_name || m.away?.name)}</span></div></div>
-    <div class="mid">${sc}<div class="st">${esc(st)}</div></div>
   </a>`;
 }
 document.addEventListener("click", (e) => {
@@ -316,7 +316,7 @@ async function viewHome(params) {
     body.innerHTML = COMPS.map((c) => {
       const ms = list.filter((m) => m.competition_id === c.id); if (!ms.length) return "";
       const lv = ms.filter((m) => m.status === "LIVE").length;
-      return `<div class="comp-group"><div class="comp-head"><span class="ch-star">${ICON.starO}</span><img src="${c.logo}" alt=""><a class="nm" href="#/league/${c.id}"><b>${c.name}</b><small>${c.country}</small></a><span class="ch-pin">${ICON.pin}</span><a class="ch-tbl" href="#/league/${c.id}" aria-label="Таблица"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 6h10M10 12h10M10 18h10M4 5.5h2v4M4 14h2l-2 3h2"/></svg></a><span class="cnt">${lv ? `<span class="live-dot"></span> ${lv} / ` : ""}${ms.length}</span><button class="ch-col" data-col aria-label="Свернуть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 15l7-7 7 7"/></svg></button></div>${ms.map((m) => matchRow(m)).join("")}</div>`;
+      return `<div class="comp-group"><a class="comp-head" href="#/league/${c.id}"><img src="${c.logo}" alt=""><span class="nm">${c.country} · ${c.name}</span><span class="cnt">${lv ? `<span class="live-dot"></span> ${lv} / ` : ""}${ms.length}</span></a>${ms.map((m) => matchRow(m)).join("")}</div>`;
     }).join("");
   };
   $("#fseg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; state.filter = b.dataset.f; store.set("homeFilter", state.filter); setSeg(); draw(); });

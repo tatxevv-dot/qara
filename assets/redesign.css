@@ -69,40 +69,6 @@ h1,h2,h3,.logo,.big,.mh-score,.comp-head h2{font-family:var(--font);letter-spaci
 .foot a,.foot strong{color:#fff}
 ::selection{background:#ff0046;color:#fff}
 @media(max-width:767px){.mrow{min-height:52px}.gnav-links{display:none}}
-/* === Макет списка как на скриншоте === */
-.comp-head{display:flex;align-items:center;gap:12px;min-height:58px;padding:0 0 0 12px;background:var(--tg);color:var(--text);position:relative}
-.comp-head>img{width:28px;height:20px;object-fit:cover;border-radius:2px;flex:none}
-.comp-head .ch-star{width:26px;height:26px;color:#8a98a0;flex:none;display:flex}
-.comp-head .ch-star svg,.mrow .fav svg{width:100%;height:100%}
-.comp-head .nm{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.2}
-.comp-head .nm b{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.comp-head .nm small{font-size:13px;text-transform:uppercase;color:var(--text-2);letter-spacing:.03em}
-.comp-head .ch-pin{width:22px;height:22px;color:#0a84ff;flex:none;display:flex}
-.comp-head .ch-pin svg{width:100%;height:100%}
-.comp-head .ch-tbl{width:30px;height:30px;color:var(--text-2);margin:0 14px;flex:none;display:flex}
-.comp-head .ch-tbl svg{width:100%;height:100%}
-.comp-head .cnt{font-size:12px;color:var(--text-2);flex:none}
-.comp-head .ch-col{width:52px;align-self:stretch;border:0;border-left:2px solid var(--bg-elev);background:transparent;color:var(--text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
-.comp-head .ch-col svg{width:26px;height:26px;transition:transform .2s}
-.comp-group.collapsed .ch-col svg{transform:rotate(180deg)}
-.comp-group.collapsed .mrow{display:none}
-.comp-group:nth-of-type(even) .comp-head{background:#ebebeb}
-[data-theme="dark"] .comp-group:nth-of-type(even) .comp-head{background:#1d2d37}
-.mrow{display:flex;align-items:center;gap:14px;min-height:73px;padding:6px 20px 6px 10px;font-size:16px;border-bottom:1px solid var(--line);background:var(--bg-elev)}
-.mrow .fav{order:0;width:26px;height:26px;padding:0;background:none;border:0;color:#b4bec4;flex:none;position:static;display:flex}
-.mrow .fav.on{color:#ffb400}
-.mrow .tms{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
-.mrow .tm{display:flex;flex-direction:row;justify-content:flex-start;text-align:left;gap:14px;align-items:center}
-.mrow .tm.h{justify-content:flex-start;text-align:left}
-.mrow .tm span{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mrow .tm.win span{font-weight:700}
-.mrow .tm .crest{width:26px;height:26px;flex:none;border-radius:2px}
-.mrow .mid{flex:none;min-width:48px;display:flex;flex-direction:column;align-items:flex-end;text-align:right}
-.mrow .mid .sc{display:flex;flex-direction:column;gap:5px;background:none;border:0;padding:0;min-width:0;font-weight:700}
-.mrow .mid .sc b{font-weight:700;line-height:1.3}
-.mrow.live .mid .sc b,.mrow.live .st{color:#ff0046}
-.mrow .mid .tm-time{color:var(--text-2);font-weight:400;font-size:16px}
-.mrow .st{font-size:12px;margin-top:2px;color:var(--text-2);text-align:right}
 /* === Классические белая и тёмная темы === */
 :root{--bg:#f2f2f4;--bg-elev:#fff;--bg-sunk:#f7f7f8;--fill:#ececef;--fill-2:#f7f7f8;--text:#111;--text-2:#6b6b73;--text-3:#8e8e96;--line:#e4e4e8;--line-2:#e4e4e8;--nav-bg:rgba(255,255,255,.92);--tg:#f7f7f8;--home:#e6003c;--away:#222}
 [data-theme="dark"]{--bg:#0e0e10;--bg-elev:#18181b;--bg-sunk:#121214;--fill:#27272b;--fill-2:#1f1f23;--text:#f2f2f3;--text-2:#9a9aa2;--text-3:#7a7a82;--line:#2a2a2f;--line-2:#2a2a2f;--nav-bg:rgba(18,18,20,.92);--tg:#1f1f23;--away:#9a9aa2}
@@ -148,3 +114,22 @@ img{image-rendering:auto}
 .mrow:last-child{border-bottom:0}
 .comp-group{border-radius:18px;overflow:hidden;margin-bottom:12px}
 .datebar,.dates,.feed-tools{border-radius:18px}
+
+/* список матчей как в старом макете, но аккуратнее */
+.comp-group{background:var(--bg-elev);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-bottom:12px}
+.comp-head{display:flex;align-items:center;gap:10px;min-height:48px;padding:10px 16px;background:transparent;border-bottom:1px solid var(--line);font-weight:700}
+.comp-head img{width:24px;height:24px;object-fit:contain}
+.comp-head .nm{flex:1;font-size:14px}
+.comp-head .cnt{font-size:12px;color:var(--text-2);font-weight:500}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) 84px minmax(0,1fr) 36px;align-items:center;gap:10px;min-height:56px;padding:8px 16px;border-bottom:1px solid var(--line)}
+.mrow:last-child{border-bottom:0}
+.mrow .tm{display:flex;align-items:center;gap:10px;min-width:0}
+.mrow .tm.h{justify-content:flex-end;text-align:right}
+.mrow .tm span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mrow .mid{text-align:center;display:block}
+.mrow .mid .sc{display:inline-block;background:var(--fill);border-radius:10px;padding:3px 10px;min-width:60px;font-weight:700}
+.mrow .mid .tm-time{color:var(--text);font-weight:600}
+.mrow .st{font-size:11px;color:var(--text-3);text-align:center;margin-top:2px}
+.mrow .fav{position:static;background:none;border:0;color:#b4bec4;width:26px;height:26px;padding:0;display:flex}
+.mrow .fav.on{color:#ffb400}
+.mrow .fav svg{width:100%;height:100%}
