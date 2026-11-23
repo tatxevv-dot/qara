@@ -103,3 +103,28 @@ h1,h2,h3,.logo,.big,.mh-score,.comp-head h2{font-family:var(--font);letter-spaci
 .mrow.live .mid .sc b,.mrow.live .st{color:#ff0046}
 .mrow .mid .tm-time{color:var(--text-2);font-weight:400;font-size:16px}
 .mrow .st{font-size:12px;margin-top:2px;color:var(--text-2);text-align:right}
+/* === Классические белая и тёмная темы === */
+:root{--bg:#f2f2f4;--bg-elev:#fff;--bg-sunk:#f7f7f8;--fill:#ececef;--fill-2:#f7f7f8;--text:#111;--text-2:#6b6b73;--text-3:#8e8e96;--line:#e4e4e8;--line-2:#e4e4e8;--nav-bg:rgba(255,255,255,.92);--tg:#f7f7f8;--home:#e6003c;--away:#222}
+[data-theme="dark"]{--bg:#0e0e10;--bg-elev:#18181b;--bg-sunk:#121214;--fill:#27272b;--fill-2:#1f1f23;--text:#f2f2f3;--text-2:#9a9aa2;--text-3:#7a7a82;--line:#2a2a2f;--line-2:#2a2a2f;--nav-bg:rgba(18,18,20,.92);--tg:#1f1f23;--away:#9a9aa2}
+.gnav{background:var(--nav-bg);color:var(--text);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}
+.gnav .logo,.gnav .logo span{color:var(--text)}
+.gnav-links a,.gnav-links button{color:var(--text)}
+.gnav-links a:hover,.gnav-links button:hover{background:var(--fill)}
+.gnav-links a.on,.gnav-links a[aria-current]{background:transparent;color:var(--text)}
+.gnav .icon-btn{background:var(--fill);color:var(--text)}
+.gnav .icon-btn:hover,#burger[aria-expanded="true"]{background:var(--text);color:var(--bg-elev)}
+.tabbar{background:var(--nav-bg);border-top:1px solid var(--line);backdrop-filter:blur(14px)}
+.tabbar a{color:var(--text-2)}
+.tabbar a.on,.tabbar a[aria-current]{color:var(--text);box-shadow:inset 0 -4px #ff0046}
+.foot{background:var(--bg-sunk);color:var(--text-2);border-top:1px solid var(--line)}
+.foot a,.foot strong{color:var(--text)}
+.datebar .on,.dates .on,.date.on{background:var(--text);color:var(--bg-elev);border-color:var(--text)}
+.comp-head,.comp-group:nth-of-type(even) .comp-head,[data-theme="dark"] .comp-group:nth-of-type(even) .comp-head{background:var(--tg)}
+.comp-group:nth-of-type(even) .comp-head{background:var(--fill)}
+[data-theme="dark"] .comp-group:nth-of-type(even) .comp-head{background:#222226}
+.comp-head .ch-col{border-left-color:var(--bg-elev)}
+/* логотипы целиком, без обрезки */
+.crest,.mrow .tm .crest,.comp-head>img{object-fit:contain!important;border-radius:0;background:transparent}
+.comp-head>img{width:30px;height:30px;padding:2px}
+.mrow .tm .crest{width:28px;height:28px;padding:1px}
+.crest img,img.crest{object-fit:contain!important;width:100%;height:100%}
