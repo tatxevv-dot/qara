@@ -134,3 +134,17 @@ h1,h2,h3,.logo,.big,.mh-score,.comp-head h2{font-family:var(--font);letter-spaci
 .mh .crest{width:auto;max-width:72px;height:72px}
 img{image-rendering:auto}
 .crest{transform:none!important;filter:none}
+/* убрать красный индикатор активной вкладки внизу */
+.tabbar a::before,.tabbar a::after,.tabbar button::before,.tabbar button::after,.tabbar::before,.tabbar::after{content:none!important;display:none!important;background:none!important}
+.tabbar a.on,.tabbar a[aria-current],.tabbar .on{box-shadow:none!important;background:none!important;color:var(--text)!important}
+/* скругления: плеер, карточки, вкладки матча */
+.card,.tile,.flyout-in{border-radius:18px!important;overflow:hidden}
+.card-h{border-radius:0}
+.st-item,.st-box,.st-box>*,.st-box iframe,.st-box video,.st-err{border-radius:16px!important;overflow:hidden}
+.st-item{padding:8px}
+.localnav,.localnav-in,.localnav .tabs{border-radius:18px!important;overflow:hidden}
+.localnav .tabs{padding:4px;gap:4px;background:var(--bg-elev)}
+.localnav .tabs a,.localnav .tabs button,.localnav a.on,.localnav .tabs .on{border-radius:14px!important}
+.mrow:last-child{border-bottom:0}
+.comp-group{border-radius:18px;overflow:hidden;margin-bottom:12px}
+.datebar,.dates,.feed-tools{border-radius:18px}
