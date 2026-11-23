@@ -1,0 +1,105 @@
+/* Дизайн по ТЗ (раздел 3 и Приложение А). Только стили: логика и база без изменений. */
+:root{
+--font:Roboto,Inter,system-ui,Helvetica,Arial,sans-serif;--font-display:var(--font);
+--bg:#f5f5f5;--bg-elev:#fff;--bg-sunk:#ebebeb;--fill:#ebebeb;--fill-2:#f5f5f5;
+--text:#001e28;--text-2:#6e7f88;--text-3:#6e7f88;--line:#e6e6e6;--line-2:#e6e6e6;
+--accent:#ff0046;--accent-hover:#e6003c;--accent-press:#cc0036;--link:#001e28;
+--accent-soft:rgba(255,0,70,.1);--accent-ring:rgba(255,0,70,.3);
+--live:#ff0046;--win:#00a650;--loss:#ff0046;--home:#e6003c;--away:#001e28;
+--nav-bg:#001e28;--nav-text:#fff;--glow-a:transparent;--glow-b:transparent;
+--r-xl:4px;--r-lg:4px;--r-md:4px;--r-sm:4px;--r-xs:4px;--maxw:1200px;
+--shadow:none;--shadow-xs:none;--shadow-lg:0 12px 40px rgba(0,30,40,.3);--tg:#eef4fd
+}
+[data-theme="dark"]{
+--bg:#0f1b22;--bg-elev:#14212a;--bg-sunk:#0f1b22;--fill:#1d2d37;--fill-2:#14212a;
+--text:#fff;--text-2:#6e7f88;--text-3:#6e7f88;--line:#25353f;--line-2:#25353f;--link:#fff;
+--home:#ff0046;--away:#8fa3ad;--tg:#1a2b36
+}
+body{font-family:var(--font);font-size:14px;line-height:1.35;background:var(--bg);color:var(--text)}
+h1,h2,h3,.logo,.big,.mh-score,.comp-head h2{font-family:var(--font);letter-spacing:0}
+/* шапка #001E28 (50px) */
+.gnav{background:#001e28;border-bottom:0;backdrop-filter:none;color:#fff}
+.gnav-in{min-height:50px}
+.gnav .logo,.gnav .logo span{color:#fff;font-weight:900;letter-spacing:-.03em;font-size:22px}
+.gnav .logo span::after{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff0046;margin-left:2px}
+.gnav-links a,.gnav-links button{color:#fff;font-weight:700;text-transform:uppercase;font-size:13px;border-radius:0;position:relative;background:none}
+.gnav-links a:hover,.gnav-links button:hover{background:rgba(255,255,255,.08)}
+.gnav-links a.on,.gnav-links a[aria-current]{background:rgba(0,0,0,.25);color:#fff}
+.gnav-links a.on::after,.gnav-links a[aria-current]::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:#ff0046}
+.gnav .icon-btn{background:rgba(255,255,255,.1);color:#fff;border-radius:4px}
+.gnav .icon-btn:hover,#burger[aria-expanded="true"]{background:#fff;color:#001e28}
+/* панели меню */
+.flyout{background:var(--bg-elev);border-radius:0 0 24px 24px;color:var(--text)}
+.flyout h6{text-transform:uppercase;font-size:12px;font-weight:800;color:var(--text-2)}
+/* карточки */
+.card,.tile,.flyout-in{background:var(--bg-elev);border:1px solid var(--line);border-radius:4px;box-shadow:none}
+.card-h,.comp-head{background:var(--tg);font-weight:700;border-bottom:1px solid var(--line)}
+.comp-head h2{font-size:13px;font-weight:800}
+.comp-head small,.comp-head .country{text-transform:uppercase;font-size:11px;color:var(--text-2);font-weight:500}
+/* строка матча: 40px десктоп / 52px мобильный */
+.mrow{min-height:40px;border-bottom:1px solid var(--line);border-radius:0;font-size:13px;transition:background .15s}
+.mrow:hover{background:var(--accent-soft)}
+.mrow .mid,.mrow .score,.mh-score{font-weight:700;font-size:14px}
+.mrow.live .mid,.mrow.live .score,.mrow.live .min,.live,.pl-dot{color:#ff0046}
+.mrow.live{animation:goalflash 5s 1}
+@keyframes goalflash{0%,40%{background:rgba(255,0,70,.15)}100%{background:transparent}}
+.crest{border-radius:50%}
+/* фильтры-пилюли ALL / LIVE / ODDS / FINISHED / SCHEDULED */
+.seg,.feed-tools,.tabs,.localnav-in{gap:6px}
+.seg button,.tabs button,.tabs a,.pill,.localnav a,.localnav button{border-radius:999px;text-transform:uppercase;font-weight:700;font-size:12px;background:var(--fill);color:var(--text);border:0;padding:7px 14px}
+.seg-thumb{display:none}
+.seg button.on,.tabs .on,.pill.on,.localnav .on,.seg button[aria-pressed="true"]{background:#ff0046!important;color:#fff!important;box-shadow:none}
+/* выбор даты */
+.datebar button,.datebar a,.dates button,.dates a{background:var(--bg-elev);border-radius:4px;border:1px solid var(--line);text-transform:uppercase;font-weight:700}
+.datebar .on,.dates .on,.date.on{background:#001e28;color:#fff;border-color:#001e28}
+/* кнопки, таблицы */
+.btn{background:#ff0046;color:#fff;border:0;border-radius:4px;text-transform:uppercase;font-weight:700;box-shadow:none}
+.btn:hover{background:#e6003c}
+.tbl th{font-size:11px;text-transform:uppercase;font-weight:700;color:var(--text-2);background:var(--bg-sunk)}
+.tbl tr:hover td{background:var(--accent-soft)}
+/* полосы статистики: хозяева #E6003C, гости #001E28 */
+[class*="bar"] .h,[class*="bar"] .home,.sbar .l,.stat-bar .l{background:#e6003c}
+[class*="bar"] .a,[class*="bar"] .away,.sbar .r,.stat-bar .r{background:#001e28}
+[data-theme="dark"] [class*="bar"] .a,[data-theme="dark"] [class*="bar"] .away{background:#8fa3ad}
+/* нижняя панель мобильной версии */
+.tabbar{background:#001e28;border-top:0;backdrop-filter:none}
+.tabbar a{color:rgba(255,255,255,.7);text-transform:uppercase;font-size:11px;font-weight:700}
+.tabbar a.on,.tabbar a[aria-current]{color:#fff;box-shadow:inset 0 -4px #ff0046}
+.foot{background:#001e28;color:#fff;border:0}
+.foot a,.foot strong{color:#fff}
+::selection{background:#ff0046;color:#fff}
+@media(max-width:767px){.mrow{min-height:52px}.gnav-links{display:none}}
+/* === Макет списка как на скриншоте === */
+.comp-head{display:flex;align-items:center;gap:12px;min-height:58px;padding:0 0 0 12px;background:var(--tg);color:var(--text);position:relative}
+.comp-head>img{width:28px;height:20px;object-fit:cover;border-radius:2px;flex:none}
+.comp-head .ch-star{width:26px;height:26px;color:#8a98a0;flex:none;display:flex}
+.comp-head .ch-star svg,.mrow .fav svg{width:100%;height:100%}
+.comp-head .nm{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.2}
+.comp-head .nm b{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.comp-head .nm small{font-size:13px;text-transform:uppercase;color:var(--text-2);letter-spacing:.03em}
+.comp-head .ch-pin{width:22px;height:22px;color:#0a84ff;flex:none;display:flex}
+.comp-head .ch-pin svg{width:100%;height:100%}
+.comp-head .ch-tbl{width:30px;height:30px;color:var(--text-2);margin:0 14px;flex:none;display:flex}
+.comp-head .ch-tbl svg{width:100%;height:100%}
+.comp-head .cnt{font-size:12px;color:var(--text-2);flex:none}
+.comp-head .ch-col{width:52px;align-self:stretch;border:0;border-left:2px solid var(--bg-elev);background:transparent;color:var(--text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.comp-head .ch-col svg{width:26px;height:26px;transition:transform .2s}
+.comp-group.collapsed .ch-col svg{transform:rotate(180deg)}
+.comp-group.collapsed .mrow{display:none}
+.comp-group:nth-of-type(even) .comp-head{background:#ebebeb}
+[data-theme="dark"] .comp-group:nth-of-type(even) .comp-head{background:#1d2d37}
+.mrow{display:flex;align-items:center;gap:14px;min-height:73px;padding:6px 20px 6px 10px;font-size:16px;border-bottom:1px solid var(--line);background:var(--bg-elev)}
+.mrow .fav{order:0;width:26px;height:26px;padding:0;background:none;border:0;color:#b4bec4;flex:none;position:static;display:flex}
+.mrow .fav.on{color:#ffb400}
+.mrow .tms{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.mrow .tm{display:flex;flex-direction:row;justify-content:flex-start;text-align:left;gap:14px;align-items:center}
+.mrow .tm.h{justify-content:flex-start;text-align:left}
+.mrow .tm span{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mrow .tm.win span{font-weight:700}
+.mrow .tm .crest{width:26px;height:26px;flex:none;border-radius:2px}
+.mrow .mid{flex:none;min-width:48px;display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.mrow .mid .sc{display:flex;flex-direction:column;gap:5px;background:none;border:0;padding:0;min-width:0;font-weight:700}
+.mrow .mid .sc b{font-weight:700;line-height:1.3}
+.mrow.live .mid .sc b,.mrow.live .st{color:#ff0046}
+.mrow .mid .tm-time{color:var(--text-2);font-weight:400;font-size:16px}
+.mrow .st{font-size:12px;margin-top:2px;color:var(--text-2);text-align:right}
