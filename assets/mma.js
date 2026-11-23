@@ -17,7 +17,9 @@
   const ini = (n) => (n || "?").split(" ").map((x) => x[0]).slice(0, 2).join("").toUpperCase();
   const ph = (f, cls = "mm-ph") => `<span class="${cls}"><img src="${E(f?.photo_url || "")}" alt="" loading="lazy" onload="this.parentNode.classList.add('ok')" onerror="this.remove()"><em>${E(ini(f?.name))}</em></span>`;
   const skel = (n = 6) => Array.from({ length: n }, () => `<div class="sk sk-row"></div>`).join("");
+  const LOGO = (c) => `<img class="mm-logo ${c || ""}" src="assets/ufc.png" alt="UFC">`;
   const set = (h) => { root().innerHTML = h; };
+  const isDone = (x) => x.status === "FINISHED" || !!x.winner_id || !!x.method;
   const FSEL = "id,name,nickname,country,country_code,photo_url,wins,losses,draws,no_contests,weight_class";
 
   const subnav = (cur, tab) => { const on = (k) => (cur === k ? " on" : ""); return `<nav class="mm-seg" aria-label="Разделы UFC"><a href="#/mma" class="${cur === "sched" && tab !== "past" ? "on" : ""}">Ближайшие</a><a href="#/mma?t=past" class="${cur === "sched" && tab === "past" ? "on" : ""}">Прошедшие</a><a href="#/mma/rankings" class="${on("rank").trim()}">Рейтинги</a></nav>`; };
@@ -29,40 +31,53 @@
     return `<a class="mm-side ${right ? "r" : ""} ${win === true ? "w" : win === false ? "l" : ""}" href="#/mma/fighter/${f.id}">${ph(f)}<span class="mm-who"><b>${E(f.name)}</b><small>${rec(f)}${f.country_code ? flag(f.country_code) : ""}</small></span></a>`;
   }
   function fightRow(x, f1, f2) {
-    const done = x.status === "FINISHED";
+    const done = isDone(x), lv = !done && x._live;
     const w1 = done && x.winner_id ? x.winner_id === x.fighter1_id : null;
     const w2 = done && x.winner_id ? x.winner_id === x.fighter2_id : null;
     const mid = done
-      ? `<div class="mm-res"><b>${E(METH[x.method] || x.method || "")}</b><small>${x.end_round ? "Р" + x.end_round : ""}${x.end_time ? " · " + E(x.end_time) : ""}</small></div>`
+      ? `<div class="mm-res"><b>${x.winner_id ? E(METH[x.method] || x.method || "") : "Ничья"}</b><small>${x.end_round ? "Р" + x.end_round : ""}${x.end_time ? " · " + E(x.end_time) : ""}</small></div>`
+      : lv ? `<div class="mm-res"><b class="mm-now">Идёт бой</b><small>${x.scheduled_rounds || 3} раунд.</small></div>`
       : `<div class="mm-res"><b>vs</b><small>${x.scheduled_rounds || 3} раунд.</small></div>`;
-    return `<div class="mm-fight">
-      <div class="mm-fm">${x.is_title ? `<span class="mm-belt">Титульный бой</span>` : ""}<span>${E(wcRu(x.weight_class))}</span></div>
+    return `<div class="mm-fight${lv ? " live" : ""}">
+      <div class="mm-fm">${lv ? `<span class="mm-onair"><i></i>В эфире</span>` : ""}${x.is_title ? `<span class="mm-belt">Титульный бой</span>` : ""}<span>${E(wcRu(x.weight_class))}</span></div>
       <div class="mm-fr">${side(f1, w1, false)}${mid}${side(f2, w2, true)}</div>
       ${done && x.method_detail ? `<div class="mm-det">${E(x.method_detail)}</div>` : ""}
     </div>`;
   }
+  /* прогресс карда: бои идут с конца списка (прелимы → основной), значит текущий — непройденный с наибольшим bout_order */
+  function progress(fights, live) {
+    const total = fights.length, done = fights.filter(isDone).length;
+    let cur = null; if (live) fights.forEach((x) => { if (!isDone(x) && (!cur || x.bout_order > cur.bout_order)) cur = x; });
+    if (cur) cur._live = true;
+    return { total, done, cur };
+  }
 
   /* ---------- расписание ---------- */
   const MON = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
-  const isLive = (e) => e.status === "LIVE" || (e.status !== "FINISHED" && new Date(e.start_time) <= new Date());
+  const isLive = (e) => { if (e.status === "FINISHED") return false; const t = new Date(e.start_time).getTime(), n = Date.now(); return e.status === "LIVE" || (t <= n && n - t < 10 * 36e5); };
   const when = (d) => { const t = new Date(d), n = new Date(); const k = Math.round((new Date(t.getFullYear(), t.getMonth(), t.getDate()) - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 864e5); return k <= 0 ? "Сегодня" : k === 1 ? "Завтра" : "Через " + k + " дн."; };
   const PLAYI = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>';
 
-  function hero(e, m, f1, f2, hasS) {
-    const live = isLive(e);
-    const fig = (f, r) => f ? `<a class="mm-hf ${r ? "r" : ""}" href="#/mma/fighter/${f.id}">${ph(f, "mm-ph hero")}<b>${E(f.name)}</b><small>${rec(f)}${f.country_code ? flag(f.country_code) : ""}</small></a>` : `<div class="mm-hf"></div>`;
-    return `<section class="mm-hero">
-      <div class="mm-hero-top"><span class="mm-chip-live ${live ? "on" : ""}">${live ? "LIVE" : when(e.start_time)}</span><span class="mm-hero-eb">Ближайший кард</span></div>
+  function hero(e, m, f1, f2, hasS, pr) {
+    const live = isLive(e), md = m && isDone(m);
+    const fig = (f, r) => { if (!f) return `<div class="mm-hf"></div>`; const win = md && m.winner_id ? (m.winner_id === f.id) : null;
+      return `<a class="mm-hf ${r ? "r" : ""} ${win === true ? "w" : win === false ? "l" : ""}" href="#/mma/fighter/${f.id}">${ph(f, "mm-ph hero")}${win === true ? `<em class="mm-win">Победа</em>` : ""}<b>${E(f.name)}</b><small>${rec(f)}${f.country_code ? flag(f.country_code) : ""}</small></a>`; };
+    const mid = md ? `<i>${m.winner_id ? "ИТОГ" : "НИЧЬЯ"}</i><small>${E(METH[m.method] || m.method || "")}${m.end_round ? " · Р" + m.end_round : ""}</small>` : `<i>VS</i><small>${m && m.is_title ? "Титульный бой" : "Главный бой"}</small><small>${E(wcRu(m && m.weight_class))}</small>`;
+    const prog = live && pr ? `<div class="mm-prog"><div class="mm-prog-t"><span><i></i>Идёт турнир</span><b>${pr.done} из ${pr.total} боёв</b></div><div class="mm-prog-bar"><u style="width:${pr.total ? Math.round(pr.done / pr.total * 100) : 0}%"></u></div></div>` : "";
+    return `<section class="mm-hero${live ? " live" : ""}">
+      <div class="mm-hero-top"><span class="mm-chip-live ${live ? "on" : ""}">${live ? "<i></i>LIVE" : when(e.start_time)}</span>${LOGO("hero")}</div>
       <h2>${E(e.name)}</h2>
       <p class="mm-hero-meta"><b>${fmtD(e.start_time)} · ${fmtT(e.start_time)}</b><span>${E([e.venue, e.city, e.country].filter(Boolean).join(", "))}</span></p>
-      ${m ? `<div class="mm-hero-fr">${fig(f1, false)}<div class="mm-hero-vs"><i>VS</i><small>${m.is_title ? "Титульный бой" : "Главный бой"}</small><small>${E(wcRu(m.weight_class))}</small></div>${fig(f2, true)}</div>` : ""}
-      <a class="mm-hero-btn" href="#/mma/event/${e.id}"><span>${PLAYI}</span>Смотреть трансляцию</a>
+      ${m ? `<div class="mm-hero-fr">${fig(f1, false)}<div class="mm-hero-vs">${mid}</div>${fig(f2, true)}</div>` : ""}
+      ${prog}
+      <a class="mm-hero-btn" href="#/mma/event/${e.id}"><span>${PLAYI}</span>${live ? "Смотреть live" : "Смотреть трансляцию"}</a>
       <div class="mm-hero-ft">${e.cnt || 0} боёв · ${e.event_type === "numbered" ? "Номерной турнир" : "Fight Night"}${hasS ? " · есть трансляция" : ""}</div>
     </section>`;
   }
   function evRow(e, m, f1, f2) {
     const d = new Date(e.start_time), done = e.status === "FINISHED";
-    const vs = m ? `${E(f1?.name || "—")} <i>vs</i> ${E(f2?.name || "—")}` : "";
+    const wn = done && m && m.winner_id ? (m.winner_id === m.fighter1_id ? f1 : f2) : null;
+    const vs = m ? (wn ? `<b class="mm-wn">${E(wn.name)}</b> <i>победил</i> ${E((wn === f1 ? f2 : f1)?.name || "—")}` : `${E(f1?.name || "—")} <i>vs</i> ${E(f2?.name || "—")}`) : "";
     return `<a class="mm-row" href="#/mma/event/${e.id}">
       <div class="mm-dt"><b>${d.getDate()}</b><span>${MON[d.getMonth()]}</span></div>
       <div class="mm-rb"><b>${E(e.name)}</b><span>${vs}</span><small>${done ? "Завершён" : fmtT(e.start_time)} · ${E([e.city, e.country].filter(Boolean).join(", "))}</small></div>
@@ -70,14 +85,15 @@
     </a>`;
   }
 
-  async function viewSchedule(params) {
+  let pollT = null; const stopPoll = () => { clearTimeout(pollT); pollT = null; };
+  async function viewSchedule(params, quiet) {
     const tab = params.get("t") === "past" ? "past" : "up";
-    set(`<div class="wrap mm"><h1 class="mm-title">UFC</h1>${subnav("sched", tab)}<div id="mmL"><div class="sk mm-hero-sk"></div>${skel(4)}</div></div>`);
+    if (!quiet) set(`<div class="wrap mm"><h1 class="mm-title">${LOGO("title")}</h1>${subnav("sched", tab)}<div id="mmL"><div class="sk mm-hero-sk"></div>${skel(4)}</div></div>`);
     const now = new Date().toISOString();
     let q = sb.from("mma_events").select("*");
-    q = tab === "up" ? q.gte("start_time", new Date(Date.now() - 6 * 36e5).toISOString()).order("start_time", { ascending: true }).limit(20) : q.lt("start_time", now).order("start_time", { ascending: false }).limit(30);
+    q = tab === "up" ? q.gte("start_time", new Date(Date.now() - 10 * 36e5).toISOString()).order("start_time", { ascending: true }).limit(20) : q.lt("start_time", now).order("start_time", { ascending: false }).limit(30);
     const ev = await Q(q);
-    const L = document.getElementById("mmL");
+    const L = document.getElementById("mmL"); if (!L) return;
     if (!ev.length) { L.innerHTML = `<div class="card"><div class="empty-note">Карты не найдены.</div></div>`; return; }
     const ids = ev.map((e) => e.id);
     const [fights, srows] = await Promise.all([
@@ -92,7 +108,11 @@
     const rows = (list) => list.map((e) => { const m = main[e.id]; return evRow(e, m, m && fs[m.fighter1_id], m && fs[m.fighter2_id]); }).join("");
     if (tab === "up") {
       const [h, ...rest] = ev; h.cnt = cnt[h.id]; const m = main[h.id];
-      L.innerHTML = hero(h, m, m && fs[m.fighter1_id], m && fs[m.fighter2_id], hasS.has(String(h.id))) + (rest.length ? `<h3 class="mm-sec">Дальше в календаре</h3><div class="card mm-list">${rows(rest)}</div>` : "");
+      const pr = progress(fights.filter((x) => x.event_id === h.id), isLive(h));
+      const shown = hero(h, m, m && fs[m.fighter1_id], m && fs[m.fighter2_id], hasS.has(String(h.id)), pr) + (rest.length ? `<h3 class="mm-sec">Дальше в календаре</h3><div class="card mm-list">${rows(rest)}</div>` : "");
+      L.innerHTML = shown;
+      /* live: обновляем данные без перерисовки скелета, пока турнир идёт или вот-вот начнётся */
+      stopPoll(); if (isLive(h) || (new Date(h.start_time) - Date.now() < 36e5 && h.status !== "FINISHED")) pollT = setTimeout(() => { if (/^#\/mma\/?(\?t=up)?$/.test(location.hash) || location.hash === "#/mma") viewSchedule(params, true).catch(() => {}); }, 30000);
     } else L.innerHTML = `<div class="card mm-list">${rows(ev)}</div>`;
   }
 
@@ -176,23 +196,35 @@
     });
   }
 
-  async function viewEvent(id) {
-    killP();
-    set(`<div class="wrap mm">${skel(8)}</div>`);
+  async function viewEvent(id, quiet) {
+    if (!quiet) { killP(); stopPoll(); set(`<div class="wrap mm">${skel(8)}</div>`); }
     const [e] = await Q(sb.from("mma_events").select("*").eq("id", id));
     if (!e) { set(`<div class="wrap"><div class="card"><div class="empty-note">Карт не найден.</div></div></div>`); return; }
     const fights = await Q(sb.from("mma_fights").select("*").eq("event_id", id).order("bout_order", { ascending: true }));
     const fids = [...new Set(fights.flatMap((x) => [x.fighter1_id, x.fighter2_id]))];
     const fs = {}; if (fids.length) (await Q(sb.from("mma_fighters").select(FSEL).in("id", fids))).forEach((f) => (fs[f.id] = f));
+    const live = isLive(e), pr = progress(fights, live);
     const groups = {}; fights.forEach((x) => (groups[x.card_section || "main"] ||= []).push(x));
     const blocks = ["main", "prelim", "early"].filter((k) => groups[k]).map((k) =>
       `<div class="card mm-sec"><div class="card-h">${SECT[k]}</div>${groups[k].map((x) => fightRow(x, fs[x.fighter1_id], fs[x.fighter2_id])).join("")}</div>`).join("");
+    if (quiet) {
+      if (curEventId() !== String(id)) return;
+      const w = root().querySelector(".wrap.mm"); if (!w) return;
+      w.querySelectorAll(".card.mm-sec").forEach((n) => n.remove()); const t = document.createElement("div"); t.innerHTML = blocks;
+      const after = w.querySelector("#mmTop") || w.querySelector(".mm-h"); [...t.children].reverse().forEach((n) => after.after(n));
+      const lb = w.querySelector(".mm-evlive"); if (lb) lb.innerHTML = liveBar(live, pr);
+    } else {
     set(`<div class="wrap mm"><a class="mm-back" href="#/mma">← Все карды</a>
       ${head(E(e.name), `${fmtD(e.start_time, { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · ${fmtT(e.start_time)}<br>${E([e.venue, e.city, e.country].filter(Boolean).join(", "))}`)}
+      <div class="mm-evlive">${liveBar(live, pr)}</div>
       ${blocks || `<div class="card"><div class="empty-note">Бои ещё не объявлены.</div></div>`}</div>`);
     await checkAdmin();
     if (curEventId() === String(id)) mountStreams(e, root().querySelector(".wrap"));
+    }
+    stopPoll();
+    if (live || (new Date(e.start_time) - Date.now() < 36e5 && e.status !== "FINISHED")) pollT = setTimeout(() => { if (curEventId() === String(id)) viewEvent(id, true).catch(() => {}); }, 30000);
   }
+  const liveBar = (live, pr) => (live ? `<div class="mm-prog ev"><div class="mm-prog-t"><span><i></i>Турнир идёт · обновляется автоматически</span><b>${pr.done} из ${pr.total} боёв</b></div><div class="mm-prog-bar"><u style="width:${pr.total ? Math.round(pr.done / pr.total * 100) : 0}%"></u></div></div>` : "");
 
   /* ---------- боец ---------- */
   async function viewFighter(id) {
@@ -216,13 +248,13 @@
     const bar = (l, v, suf = "") => (v == null ? "" : `<div class="mm-bar"><div><span>${l}</span><b>${v}${suf}</b></div><i><u style="width:${Math.min(100, suf === "%" ? v : v * 10)}%"></u></i></div>`);
     const tot = Math.max(1, f.wins);
     const seg = (n, c, l) => (n ? `<div class="mm-seg" style="flex:${n}"><i class="${c}"></i><span>${l} ${n}</span></div>` : "");
-    const hist = fights.filter((x) => x.status === "FINISHED").map((x) => {
+    const hist = fights.filter(isDone).map((x) => {
       const o = O[x.fighter1_id == id ? x.fighter2_id : x.fighter1_id];
       const res = !x.winner_id ? "ничья" : x.winner_id == id ? "Победа" : "Поражение";
       const cls = !x.winner_id ? "d" : x.winner_id == id ? "w" : "l";
       return `<a class="mm-h-row" href="#/mma/event/${x.event_id}"><span class="mm-chip ${cls}">${res === "Победа" ? "П" : res === "Поражение" ? "Пр" : "Н"}</span><span class="mm-hw"><b>${E(o?.name || "—")}</b><small>${E(EV[x.event_id]?.name || "")} · ${fmtD(EV[x.event_id]?.start_time, { day: "numeric", month: "short", year: "numeric" })}</small></span><span class="mm-hm">${E(METH[x.method] || x.method || "")}<small>${x.end_round ? "Р" + x.end_round : ""}${x.end_time ? " · " + E(x.end_time) : ""}</small></span></a>`;
     }).join("");
-    const next = fights.filter((x) => x.status !== "FINISHED").map((x) => {
+    const next = fights.filter((x) => !isDone(x)).map((x) => {
       const o = O[x.fighter1_id == id ? x.fighter2_id : x.fighter1_id];
       return `<a class="mm-h-row" href="#/mma/event/${x.event_id}"><span class="mm-chip d">vs</span><span class="mm-hw"><b>${E(o?.name || "—")}</b><small>${E(EV[x.event_id]?.name || "")}</small></span><span class="mm-hm">${fmtD(EV[x.event_id]?.start_time)}</span></a>`;
     }).join("");
@@ -256,6 +288,7 @@
   /* ---------- вход из роутера ---------- */
   window.viewMma = async function (parts, params) {
     if (!(parts[0] === "event")) killP();
+    if (!parts[0] || parts[0] !== "event") stopPoll();
     document.title = "UFC — qara.";
     if (parts[0] === "event" && parts[1]) return viewEvent(parts[1]);
     if (parts[0] === "fighter" && parts[1]) return viewFighter(parts[1]);
@@ -276,7 +309,7 @@
       const [m] = await Q(sb.from("mma_fights").select("*").eq("event_id", e.id).order("bout_order", { ascending: true }).limit(1));
       let a, b; if (m) (await Q(sb.from("mma_fighters").select(FSEL).in("id", [m.fighter1_id, m.fighter2_id]))).forEach((f) => (f.id === m.fighter1_id ? (a = f) : (b = f)));
       const d = document.createElement("div"); d.id = "mmHome"; d.className = "card mm-home";
-      d.innerHTML = `<div class="card-h">UFC · ближайший кард<a class="more" href="#/mma">Все карды</a></div><a class="mm-ev-in" href="#/mma/event/${e.id}"><div class="mm-evh"><div><b>${E(e.name)}</b><small>${fmtD(e.start_time)} · ${fmtT(e.start_time)}</small></div></div>${a && b ? `<div class="mm-main">${ph(a)}<span class="mm-vs"><b>${E(a.name)}</b> vs <b>${E(b.name)}</b></span>${ph(b)}</div>` : ""}</a>`;
+      d.innerHTML = `<div class="card-h">${LOGO("sm")} · ближайший кард<a class="more" href="#/mma">Все карды</a></div><a class="mm-ev-in" href="#/mma/event/${e.id}"><div class="mm-evh"><div><b>${E(e.name)}</b><small>${fmtD(e.start_time)} · ${fmtT(e.start_time)}</small></div></div>${a && b ? `<div class="mm-main">${ph(a)}<span class="mm-vs"><b>${E(a.name)}</b> vs <b>${E(b.name)}</b></span>${ph(b)}</div>` : ""}</a>`;
       wrap.appendChild(d);
     } catch (e) { /* ignore */ } finally { busy = false; }
   }

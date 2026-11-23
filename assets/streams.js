@@ -42,12 +42,12 @@
 .sx-nm{position:relative;z-index:1;font-size:21px;line-height:1.08;font-weight:800;text-transform:uppercase;letter-spacing:-.01em;display:flex;flex-direction:column;gap:2px;overflow:hidden}
 .sx-nm span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sx-card.mma{background:linear-gradient(170deg,#c4122b 0%,#14080c 80%)}
-.sx-ufc{position:absolute;top:14px;left:14px;height:38px;padding:0 10px;border-radius:12px;background:#fff;color:#d20a0a;font-weight:900;font-size:15px;letter-spacing:.02em;display:grid;place-items:center;z-index:1}
+.sx-ufc{position:absolute;top:14px;left:14px;height:38px;padding:0 11px;border-radius:12px;background:#fff;display:grid;place-items:center;z-index:1}.sx-ufc img{height:16px;width:auto;display:block}
 .sx-ph{position:relative;width:88px;height:88px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.16);display:grid;place-items:center;font-weight:800;font-size:24px;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 8px 18px rgba(0,0,0,.35);flex:none}
 .sx-ph em{font-style:normal}.sx-ph.ok em{display:none}
 .sx-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
 .sx-cr2 .sx-ph+.sx-ph{margin-left:-16px}
-.sx-t .sx-ufcl{width:68px;height:68px;border-radius:50%;background:#fff;color:#d20a0a;display:grid;place-items:center;font-weight:900;font-size:18px}
+.sx-t .sx-ufcl{width:68px;height:68px;border-radius:50%;background:#fff;display:grid;place-items:center}.sx-ufcl img{width:40px;height:auto;display:block}
 .sx-sub{position:relative;z-index:1;margin-top:12px;font-size:13px;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* карточка эфирной записи */
@@ -149,7 +149,7 @@
   function mmaCard(m) {
     const live = LIVE(m), last = (f) => (f ? f.name.split(" ").slice(-1)[0] : "—");
     const badge = live ? `<span class="sx-badge live">LIVE</span>` : `<span class="sx-badge">${dm(m.utc_date)} <i>·</i> ${fmtTime(m.utc_date)}</span>`;
-    return `<a class="sx-card mma" href="#/mma/event/${esc(m.id)}"><span class="sx-ufc">UFC</span>${m._s ? `<span class="sx-play">${PLAY}</span>` : ""}
+    return `<a class="sx-card mma" href="#/mma/event/${esc(m.id)}"><span class="sx-ufc"><img src="assets/ufc.png" alt="UFC"></span>${m._s ? `<span class="sx-play">${PLAY}</span>` : ""}
       <div class="sx-cr2">${fph(m.f1)}${fph(m.f2)}</div>${badge}
       <div class="sx-nm"><span>${esc(last(m.f1))}</span><span>${esc(last(m.f2))}</span></div>
       <div class="sx-sub">ММА. ${esc(m.name.split(":")[0])}</div></a>`;
@@ -212,7 +212,7 @@
           <div class="sx-sec" style="margin-top:14px">${head(esc(c.name) + ". Прямые трансляции")}${row(up, card, "Пока нет запланированных трансляций.")}</div>
           <div class="sx-sec">${head(esc(c.name) + ". Обзоры матчей")}${row(done, rec, "Обзоров пока нет.")}</div>`;
       } else {
-        h = `<div class="sx-sec" style="margin-top:20px">${head("Турниры")}<div class="sx-row"><a class="sx-t" style="--c1:#c4122b;--c2:#14080c" href="#/mma"><span class="sx-ufcl">UFC</span><b>UFC</b></a>${COMPS.map(tile).join("")}</div></div>
+        h = `<div class="sx-sec" style="margin-top:20px">${head("Турниры")}<div class="sx-row"><a class="sx-t" style="--c1:#c4122b;--c2:#14080c" href="#/mma"><span class="sx-ufcl"><img src="assets/ufc.png" alt="UFC"></span><b>UFC</b></a>${COMPS.map(tile).join("")}</div></div>
           <div class="sx-sec">${head("Все трансляции", "#/streams/all")}${row(up.slice(0, 14), card, "Пока нет запланированных трансляций.")}</div>
           <div class="sx-sec">${head("Обзоры матчей", "#/streams/all")}${row(done.slice(0, 14), rec, "Обзоров пока нет.")}</div>`;
       }

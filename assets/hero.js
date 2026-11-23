@@ -59,7 +59,7 @@
   }
   function mmaBanner(it) {
     const { e, f1, f2 } = it, label = e.name.split(":")[0].trim(), last = (f) => (f ? f.name.split(" ").slice(-1)[0] : "—");
-    const mark = /fight night/i.test(label) ? `<div class="hr-ufcl"><b>UFC</b><span>FIGHT<i>NIGHT</i></span></div>` : `<div class="hr-ufcl"><b>${esc(label)}</b></div>`;
+    const mark = `<div class="hr-ufcl"><img src="assets/ufc-w.png" alt="UFC">${/fight night/i.test(label) ? "<span>FIGHT<i>NIGHT</i></span>" : /^ufc\s*\d+/i.test(label) ? `<span>${esc(label.replace(/^ufc\s*/i, "UFC "))}</span>` : ""}</div>`;
     const fig = (f, side) => `<span class="hr-tm fg ${side}">${f?.body_url ? `<img class="hr-bd" src="${esc(f.body_url)}" alt="">` : `<img class="hr-hd" src="${esc(f?.photo_url || "")}" alt="" onerror="this.style.visibility='hidden'">`}</span>`;
     return `<a class="hr-item" href="#/mma/event/${esc(e.id)}"><div class="hr-card k-UFC">${mark}<i class="hr-ln"></i>${fig(f1, "l")}${fig(f2, "r")}</div>${caption(it.live, last(f1) + " — " + last(f2), (it.live ? "" : dayLbl(it.date) + " · ") + label)}</a>`;
   }
@@ -71,6 +71,8 @@
     const items = await Promise.all(pick.slice(0, 10).map(async (m) => ({ kind: "f", m, date: m.utc_date, live: LIVE(m) })));
     const all = [...items, ...mm].sort((a, b) => (b.live - a.live) || (new Date(a.date) - new Date(b.date))).slice(0, 10);
     if (!all.length) return "";
+    const urls = []; all.forEach((i) => { if (i.kind === "m") { [i.f1, i.f2].forEach((f) => f && urls.push(f.body_url || f.photo_url)); } else [i.m.home, i.m.away].forEach((t) => t && urls.push(crestSrc(t.crest_url))); });
+    await window.preloadImgs(urls, 3000);
     return `<section class="hr"><div class="hr-h"><h2>Скоро в эфире</h2><a href="#/streams">все ›</a></div><div class="hr-wrap"><div class="hr-scroll">${all.map((i) => (i.kind === "m" ? mmaBanner(i) : footballBanner(i))).join("")}</div></div></section>`;
   }
 
@@ -151,7 +153,7 @@ ${SKIN_CSS}
 .hr-bd{width:100%;height:100%;object-fit:contain;object-position:bottom}
 .hr-hd{height:68%;aspect-ratio:1;border-radius:50%;object-fit:cover;object-position:top;box-shadow:0 0 0 2px #fff;margin-bottom:12%;background:rgba(255,255,255,.2)}
 .hr-ufcl{position:absolute;left:50%;top:8%;transform:translateX(-50%);text-align:center;line-height:1;font-style:italic;color:#fff;white-space:nowrap}
-.hr-ufcl b{display:block;font-size:30px;font-weight:900;letter-spacing:-.03em}
+.hr-ufcl img{display:block;height:30px;width:auto;margin:0 auto}
 .hr-ufcl span{display:block;margin-top:-1px;font-size:12px;font-weight:800;letter-spacing:.05em}.hr-ufcl i{font-weight:300}
 .hr-cap{padding:10px 4px 0}
 .hr-nm{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden}

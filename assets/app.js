@@ -32,7 +32,11 @@ const initials = (n) => (n || "?").split(" ").map((x) => x[0]).slice(0, 2).join(
 const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 const fmUrl = (f) => `https://images.fotmob.com/image_resources/playerimages/${f}.png`;
 const headshot = (id) => (typeof FM !== "undefined" && FM[id]) ? fmUrl(FM[id]) : BLANK; /* только FotMob */
-const crest = (t, cls = "crest") => `<img class="${cls}" src="${esc(t?.crest_url || "")}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`;
+/* эмблемы ESPN отдаём уменьшенными (96px вместо 500px) — грузятся в разы быстрее */
+const crestSrc = (u) => { u = u || ""; const m = u.match(/^https?:\/\/a\.espncdn\.com(\/i\/teamlogos\/[^?]+?\.png)/i); return m ? `https://a.espncdn.com/combiner/i?img=${m[1]}&w=96&h=96` : u; };
+const crest = (t, cls = "crest") => { const o = t?.crest_url || ""; return `<img class="${cls}" src="${esc(crestSrc(o))}" data-o="${esc(o)}" alt="" decoding="async" onload="this.classList.add('ld')" onerror="if(!this.dataset.f&&this.dataset.o&&this.src!==this.dataset.o){this.dataset.f=1;this.src=this.dataset.o}else{this.style.visibility='hidden'}">`; };
+/* предзагрузка картинок: ждём не дольше ms, чтобы блок появлялся уже с картинками */
+window.preloadImgs = (urls, ms = 2500) => Promise.race([Promise.all([...new Set(urls.filter(Boolean))].map((u) => new Promise((r) => { const i = new Image(); i.onload = i.onerror = () => r(); i.src = u; }))), new Promise((r) => setTimeout(r, ms))]);
 const FM = {}; // espn id -> fotmob id (запасной источник фото)
 window.__phErr = (im, id) => { im.remove(); };
 window.__fmFill = () => { document.querySelectorAll("img[data-pid]").forEach((im) => { const f = FM[im.dataset.pid]; if (f && im.src === BLANK) im.src = fmUrl(f); }); };
