@@ -1,4 +1,4 @@
-/* qara — шестерёнка в шапке: вход и смена темы в одной панели.
+/* qara — меню (три линии) в шапке + вкладки под шапкой: вход и смена темы в одной панели.
    Грузится после app.js и auth.js. Кнопки «аккаунт» и «тема» прячутся из шапки,
    но продолжают работать: панель вызывает их программно. */
 (function () {
@@ -7,17 +7,23 @@
   if (!icons || document.getElementById("setBtn")) return;
 
   const css = `
-#accBtn,#themeBtn{display:none!important}
+#accBtn,#themeBtn,.burger,.tabbar,.gnav-links{display:none!important}
+body{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
+.toast{bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
+.subtabs{position:sticky;top:var(--nav-h);z-index:97;display:flex;gap:6px;padding:8px 12px;background:var(--bg-elev);border-bottom:1px solid var(--line-2);overflow-x:auto;scrollbar-width:none}
+.subtabs::-webkit-scrollbar{display:none}
+.subtabs a{flex:1 1 0;min-width:max-content;text-align:center;padding:9px 16px;border-radius:999px;font-size:14px;font-weight:600;white-space:nowrap;color:var(--text-2);transition:color .2s,background .2s}
+.subtabs a:hover{color:var(--text);background:var(--fill-2)}
+.subtabs a.on{color:var(--accent);background:var(--accent-soft)}
+@media(min-width:901px){.subtabs{justify-content:center}.subtabs a{flex:0 0 auto;min-width:120px}}
 #setBtn{position:relative}
 #setBtn.in::after{content:"";position:absolute;top:8px;right:8px;width:9px;height:9px;border-radius:50%;background:var(--win);box-shadow:0 0 0 2px var(--bg-elev)}
-#setBtn svg{transition:transform .5s var(--ease)}
-#setBtn.open svg{transform:rotate(60deg)}
 .st-scrim{position:fixed;inset:var(--nav-h) 0 0 0;z-index:98;background:rgba(0,0,0,.3);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
 .st-scrim.open{opacity:1;visibility:visible}
 .st-panel{position:fixed;left:0;right:0;top:var(--nav-h);z-index:99;background:var(--bg-elev);border-radius:0 0 20px 20px;box-shadow:var(--shadow-lg);opacity:0;visibility:hidden;transform:translateY(-10px);transition:opacity .25s var(--ease),transform .3s var(--ease),visibility .25s;padding:6px 0 10px;max-height:calc(100dvh - var(--nav-h))}
 .st-panel.open{opacity:1;visibility:visible;transform:none}
 @media(min-width:641px){.st-panel{left:auto;right:16px;width:380px;border-radius:0 0 20px 20px}}
-.st-row{display:flex;align-items:center;gap:14px;width:100%;min-height:68px;padding:0 22px;background:none;border:0;border-bottom:1px solid var(--line-2);color:var(--text);font:inherit;font-size:18px;text-align:left;cursor:pointer}
+.st-row{text-decoration:none;display:flex;align-items:center;gap:14px;width:100%;min-height:68px;padding:0 22px;background:none;border:0;border-bottom:1px solid var(--line-2);color:var(--text);font:inherit;font-size:18px;text-align:left;cursor:pointer}
 .st-row:last-child{border-bottom:0}
 .st-row .sub{color:var(--text-2);font-size:15px;margin-left:6px}
 .st-row .ic{flex:none;width:24px;height:24px;color:var(--text)}
@@ -34,20 +40,35 @@
 
   const S = (p, extra) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"${extra || ""}>${p}</svg>`;
   const I = {
-    gear: S('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3h0a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5h0a1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9v0a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>'),
+    gear: S('<path d="M4 6h16M4 12h16M4 18h16"/>'),
     user: S('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>', ' class="ic"'),
     sun: S('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
     moon: S('<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>'),
     auto: S('<rect x="3" y="4" width="18" height="12" rx="2.5"/><path d="M8 20h8M12 16v4"/>'),
     chev: S('<path d="M9 6l6 6-6 6"/>', ' class="chev"'),
+    lg: S('<path d="M8 4.5v4.5a4 4 0 008 0V4.5"/><path d="M7.5 6.5H6a2 2 0 002 3.5M16.5 6.5H18a2 2 0 01-2 3.5"/><path d="M12 13.5v3.5M9 20h6"/>', ' class="ic"'),
+    st: S('<path d="M7 20v-6M12 20V5M17 20v-9"/>', ' class="ic"'),
     pal: S('<circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 010 18" fill="currentColor" stroke="none"/>', ' class="ic"'),
   };
 
   /* ---------- элементы ---------- */
   const gear = document.createElement("button");
-  gear.id = "setBtn"; gear.type = "button"; gear.className = "icon-btn"; gear.setAttribute("aria-label", "Настройки"); gear.title = "Настройки"; gear.innerHTML = I.gear;
+  gear.id = "setBtn"; gear.type = "button"; gear.className = "icon-btn"; gear.setAttribute("aria-label", "Меню"); gear.title = "Меню"; gear.innerHTML = I.gear;
   const search = document.getElementById("searchBtn");
   search ? search.after(gear) : icons.prepend(gear);
+
+  const hdr = document.querySelector(".gnav");
+  if (hdr && !document.querySelector(".subtabs")) {
+    const sub = document.createElement("nav"); sub.className = "subtabs"; sub.setAttribute("aria-label", "Разделы");
+    sub.innerHTML = '<a href="#/" data-k="home">Матчи</a><a href="#/mma" data-k="mma">UFC</a><a href="#/streams" data-k="streams">Трансляции</a>';
+    hdr.after(sub);
+    const mark = () => {
+      const h = location.hash || "#/";
+      const k = /^#\/mma(\/|\?|$)/.test(h) ? "mma" : /^#\/streams(\/|\?|$)/.test(h) ? "streams" : /^#\/?(\?.*)?$/.test(h) ? "home" : "";
+      sub.querySelectorAll("a").forEach((a) => a.classList.toggle("on", a.dataset.k === k));
+    };
+    window.addEventListener("hashchange", mark); mark();
+  }
 
   const scrim = document.createElement("div"); scrim.className = "st-scrim";
   const panel = document.createElement("div"); panel.className = "st-panel"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "Настройки");
@@ -63,7 +84,8 @@
       ? `<button class="st-row" data-a="acc" type="button"><span class="ava">${esc((email || "?")[0].toUpperCase())}</span><span class="grow">${esc(email || "Аккаунт")}</span>${I.chev}</button>`
       : `<button class="st-row" data-a="acc" type="button">${I.user}<span class="grow">Войти</span>${I.chev}</button>`;
     const seg = ["auto", "light", "dark"].map((k) => `<button type="button" data-t="${k}" class="${k === cur ? "on" : ""}" aria-label="${NAMES[k]}" title="${NAMES[k]}">${I[k === "light" ? "sun" : k === "dark" ? "moon" : "auto"]}</button>`).join("");
-    panel.innerHTML = accRow + `<div class="st-row st-theme">${I.pal}<span class="grow">Тема<span class="sub">(${NAMES[cur]})</span></span><div class="st-seg">${seg}</div></div>`;
+    const nav = `<a class="st-row" href="#/leagues">${I.lg}<span class="grow">Лиги</span>${I.chev}</a><a class="st-row" href="#/stats">${I.st}<span class="grow">Статистика</span>${I.chev}</a>`;
+    panel.innerHTML = nav + accRow + `<div class="st-row st-theme">${I.pal}<span class="grow">Тема<span class="sub">(${NAMES[cur]})</span></span><div class="st-seg">${seg}</div></div>`;
   }
 
   async function loadEmail() {
