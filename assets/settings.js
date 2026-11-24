@@ -7,7 +7,8 @@
   if (!icons || document.getElementById("setBtn")) return;
 
   const css = `
-#accBtn,#themeBtn,.burger,.tabbar,.gnav-links{display:none!important}
+#accBtn,#themeBtn,.burger,.tabbar,.gnav-links,.gnav .logo{display:none!important}
+.gnav-icons{margin-left:auto}
 body{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
 .toast{bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
 .subtabs{position:sticky;top:var(--nav-h);z-index:97;display:flex;gap:6px;padding:8px 12px;background:var(--bg-elev);border-bottom:1px solid var(--line-2);overflow-x:auto;scrollbar-width:none}
