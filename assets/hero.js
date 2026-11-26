@@ -66,7 +66,7 @@
     if (id === "NL") { const k = 6; return P(k * n * 2, k * n * 2, Array.from({ length: n * 2 }, (_, y) => Array.from({ length: n * 2 }, (_, x) => R(x * k, y * k, k, k, cs[(x + y) % n])).join("")).join(""), "rotate(45)"); } /* ромбы */
     return P(6 * n, 10, cs.map((c, i) => R(i * 6, 0, 6, 10, c)).join(""), "rotate(35)");
   }
-  const bigTxt = (id, txt) => `<svg class="hr-big" viewBox="0 0 300 100" aria-hidden="true"><text x="150" y="80" text-anchor="middle" fill="none" stroke="#fff" stroke-width="3.2" font-size="98" font-weight="900" letter-spacing="-6">${esc(txt)}</text></svg>`;
+  const bigTxt = (id, txt) => `<svg class="hr-big" viewBox="0 0 300 100" aria-hidden="true"><text x="150" y="80" text-anchor="middle" fill="#fff" font-size="98" font-weight="900" letter-spacing="-6">${esc(txt)}</text></svg>`;
   function footballBanner(it) {
     const m = it.m, c = comp(m.competition_id), inf = it.info || {};
     const lg = c.logo ? `<img src="${esc(c.logo)}" alt="">` : "";
@@ -185,7 +185,7 @@
 ${SKIN_CSS}
 .hr-sk .hr-card{background:var(--fill);animation:hrp 1.2s ease-in-out infinite alternate}@keyframes hrp{to{opacity:.55}}
 .hr-card.d{container-type:inline-size;background:#ece7de;color:#16130f}
-.hr-big{position:absolute;left:0;top:50%;width:100%;height:auto;transform:translateY(-54%);opacity:.95;pointer-events:none;overflow:visible;font-family:inherit;filter:drop-shadow(0 1px 5px rgba(22,19,15,.16))}
+.hr-big{position:absolute;left:0;top:50%;width:100%;height:auto;transform:translateY(-54%);opacity:.6;pointer-events:none;overflow:visible;font-family:inherit;filter:drop-shadow(0 1px 6px rgba(22,19,15,.14))}
 .hr-top{position:absolute;top:5.5cqw;left:6cqw;right:6cqw;display:flex;justify-content:space-between;align-items:center;font-size:3.4cqw;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(22,19,15,.55)}
 .hr-lgn{display:inline-flex;align-items:center;gap:2cqw;color:#16130f}.hr-lgn img{height:5.5cqw;width:auto;max-width:9cqw;object-fit:contain}
 .hr-card.d .hr-tm{top:17%;height:73%;width:38%;flex-direction:column;justify-content:center;gap:5%}
