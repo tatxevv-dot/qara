@@ -209,7 +209,7 @@ async function route() {
   const parts = path.split("/").filter(Boolean);
   const params = new URLSearchParams(qs || "");
   $$(".gnav-links a").forEach((a) => a.classList.toggle("active", a.dataset.r === (parts[0] || "home") || (parts[0] === "league" && ((a.dataset.r === "cl" && parts[1] === "CL") || (a.dataset.r === "nl" && parts[1] === "NL")))));
-  window.scrollTo({ top: 0 });
+  { const homeNow = !parts.length, keep = homeNow && window.__wasHome; window.__wasHome = homeNow; if (!keep) window.scrollTo({ top: 0 }); }
   try {
     if (!parts.length) await viewHome(params);
     else if (parts[0] === "league") await viewLeague(parts[1], parts[2] || "overview", params);
@@ -281,7 +281,7 @@ async function viewHome(params) {
   }
   const prev = new Date(dayStart); prev.setDate(prev.getDate() - 7); const next = new Date(dayStart); next.setDate(next.getDate() + 7);
   const favs = favTeams();
-  app().innerHTML = `<div class="wrap"><section class="qm"><div class="qm-l"><span class="qm-k">${sel.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" })}</span><h1 class="qm-t">Футбол<br><em>без паузы</em></h1><p class="qm-s">Матчи, таблицы и xG топ-5 лиг и Лиги чемпионов в одном месте.</p></div><div class="qm-r"><div class="qm-n"><b id="qLive">–</b><span>в эфире</span></div><div class="qm-n"><b id="qCnt">–</b><span>матчей за день</span></div><div class="qm-n"><b>6</b><span>турниров</span></div></div></section><nav class="qchips" aria-label="Турниры">${COMPS.map((c) => `<a href="#/league/${c.id}"><img src="${c.logo}" alt="">${c.name}</a>`).join("")}</nav>
+  app().innerHTML = `<div class="wrap"><nav class="qchips" aria-label="Турниры">${COMPS.map((c) => `<a href="#/league/${c.id}"><img src="${c.logo}" alt="">${c.name}</a>`).join("")}</nav>
     <div class="cols two">
     <main>
       <div class="card" id="feed">

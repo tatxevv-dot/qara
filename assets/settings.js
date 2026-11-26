@@ -49,6 +49,9 @@ body{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
     chev: S('<path d="M9 6l6 6-6 6"/>', ' class="chev"'),
     lg: S('<path d="M8 4.5v4.5a4 4 0 008 0V4.5"/><path d="M7.5 6.5H6a2 2 0 002 3.5M16.5 6.5H18a2 2 0 01-2 3.5"/><path d="M12 13.5v3.5M9 20h6"/>', ' class="ic"'),
     st: S('<path d="M7 20v-6M12 20V5M17 20v-9"/>', ' class="ic"'),
+    mt: S('<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7.5l3.6 2.6-1.4 4.2H9.8L8.4 10.1z\"/>', ' class=\"ic\"'),
+    uf: S('<path d=\"M12 3l8 4.6v8.8L12 21l-8-4.6V7.6z\"/><path d=\"M9 10.5h6M9 13.5h6\"/>', ' class=\"ic\"'),
+    tv: S('<rect x=\"3\" y=\"5\" width=\"18\" height=\"12\" rx=\"2.5\"/><path d=\"M10 9.2v4.6l4-2.3zM8 20h8\"/>', ' class=\"ic\"'),
     pal: S('<circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 010 18" fill="currentColor" stroke="none"/>', ' class="ic"'),
   };
 
@@ -58,18 +61,7 @@ body{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
   const search = document.getElementById("searchBtn");
   search ? search.after(gear) : icons.prepend(gear);
 
-  const hdr = document.querySelector(".gnav");
-  if (hdr && !document.querySelector(".subtabs")) {
-    const sub = document.createElement("nav"); sub.className = "subtabs"; sub.setAttribute("aria-label", "Разделы");
-    sub.innerHTML = '<a href="#/" data-k="home">Матчи</a><a href="#/mma" data-k="mma">UFC</a><a href="#/streams" data-k="streams">Трансляции</a>';
-    hdr.after(sub);
-    const mark = () => {
-      const h = location.hash || "#/";
-      const k = /^#\/mma(\/|\?|$)/.test(h) ? "mma" : /^#\/streams(\/|\?|$)/.test(h) ? "streams" : /^#\/?(\?.*)?$/.test(h) ? "home" : "";
-      sub.querySelectorAll("a").forEach((a) => a.classList.toggle("on", a.dataset.k === k));
-    };
-    window.addEventListener("hashchange", mark); mark();
-  }
+  document.querySelectorAll(".subtabs").forEach((n) => n.remove());
 
   const scrim = document.createElement("div"); scrim.className = "st-scrim";
   const panel = document.createElement("div"); panel.className = "st-panel"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "Настройки");
@@ -85,7 +77,8 @@ body{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
       ? `<button class="st-row" data-a="acc" type="button"><span class="ava">${esc((email || "?")[0].toUpperCase())}</span><span class="grow">${esc(email || "Аккаунт")}</span>${I.chev}</button>`
       : `<button class="st-row" data-a="acc" type="button">${I.user}<span class="grow">Войти</span>${I.chev}</button>`;
     const seg = ["auto", "light", "dark"].map((k) => `<button type="button" data-t="${k}" class="${k === cur ? "on" : ""}" aria-label="${NAMES[k]}" title="${NAMES[k]}">${I[k === "light" ? "sun" : k === "dark" ? "moon" : "auto"]}</button>`).join("");
-    const nav = `<a class="st-row" href="#/leagues">${I.lg}<span class="grow">Лиги</span>${I.chev}</a><a class="st-row" href="#/stats">${I.st}<span class="grow">Статистика</span>${I.chev}</a>`;
+    const hh = location.hash || "#/", on = (k) => (k === (/^#\/mma(\/|\?|$)/.test(hh) ? "mma" : /^#\/streams(\/|\?|$)/.test(hh) ? "streams" : /^#\/?(\?.*)?$/.test(hh) ? "home" : "") ? " on" : "");
+    const nav = `<a class="st-row${on("home")}" href="#/">${I.mt}<span class="grow">Матчи</span>${I.chev}</a><a class="st-row${on("mma")}" href="#/mma">${I.uf}<span class="grow">UFC</span>${I.chev}</a><a class="st-row${on("streams")}" href="#/streams">${I.tv}<span class="grow">Трансляции</span>${I.chev}</a><a class="st-row" href="#/leagues">${I.lg}<span class="grow">Лиги</span>${I.chev}</a><a class="st-row" href="#/stats">${I.st}<span class="grow">Статистика</span>${I.chev}</a>`;
     panel.innerHTML = nav + accRow + `<div class="st-row st-theme">${I.pal}<span class="grow">Тема<span class="sub">(${NAMES[cur]})</span></span><div class="st-seg">${seg}</div></div>`;
   }
 
