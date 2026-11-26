@@ -486,17 +486,15 @@ html[data-theme="dark"] .hero,html[data-theme="dark"] .mh{background:var(--bg-el
 .mrow:not(.live),.mrow:not(.live):hover,.mrow:not(.live):active,.mrow:not(.live):focus{background:var(--bg-sunk)!important}
 .card:active,.mrow:active{filter:none!important;opacity:1!important}
 
-/* tabs: plain row, underline on active */
-#app .localnav{position:sticky;top:62px;z-index:60;display:flex;align-items:flex-end;gap:12px;margin:4px 0 14px!important;padding:0 4px!important;border:0!important;border-bottom:1px solid var(--line-2)!important;border-radius:0!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
-  transition:background .32s ease,padding .32s ease,border-radius .32s ease,border-color .32s ease,margin .32s ease}
+/* tabs: plain row, underline on active; glass layer fades in behind them when they reach the header (no layout changes => no jumps) */
+#app .localnav{position:sticky;top:62px;z-index:60;display:flex;align-items:flex-end;gap:12px;margin:4px 0 14px!important;padding:0 4px!important;border:0!important;border-bottom:1px solid var(--line-2)!important;border-radius:0!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important;transition:border-color .3s ease}
+#app .localnav::before{content:"";position:absolute;left:0;right:0;top:-10px;bottom:0;z-index:-1;border-radius:0 0 22px 22px;background:var(--nav-bg);backdrop-filter:saturate(180%) blur(26px);-webkit-backdrop-filter:saturate(180%) blur(26px);border:1px solid var(--line-2);border-top:0;opacity:0;transition:opacity .3s ease;pointer-events:none}
+#app .localnav.stuck::before{opacity:1}
+#app .localnav.stuck{border-bottom-color:transparent!important}
 #app .localnav .t{font-family:var(--font-display);font-size:13px;padding-bottom:12px}
 #app .localnav .localnav-in,#app .localnav .tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
 #app .localnav a,#app .localnav .tabs a{padding:12px 14px 13px;border-radius:0;background:none!important;color:var(--text-2);font-weight:600;font-size:14.5px;white-space:nowrap;box-shadow:inset 0 -2px 0 transparent;transition:color .2s,box-shadow .2s}
 #app .localnav a:hover{color:var(--text)}
 #app .localnav a.on,#app .localnav a.active,#app .localnav .tabs a.on{color:var(--text);background:none!important;box-shadow:inset 0 -2px 0 var(--accent)}
-/* stuck state: merges with the floating header */
-#app .localnav.stuck{background:var(--nav-bg)!important;backdrop-filter:saturate(180%) blur(26px)!important;-webkit-backdrop-filter:saturate(180%) blur(26px)!important;
-  border:1px solid var(--line-2)!important;border-top:0!important;border-radius:0 0 26px 26px!important;padding:16px 10px 0!important;margin-top:4px!important;
-  max-width:min(1180px,calc(100% - 24px));margin-left:auto!important;margin-right:auto!important}
-@media (max-width:900px){#app .localnav{top:56px;flex-wrap:nowrap;gap:6px;border-radius:0!important}#app .localnav.stuck{top:56px;border-radius:0 0 22px 22px!important;margin-left:0!important;margin-right:0!important;max-width:calc(100% - 16px)}}
+@media (max-width:900px){#app .localnav{top:56px;flex-wrap:nowrap;gap:6px;border-radius:0!important}}
 .gnav{z-index:110}

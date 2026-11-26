@@ -209,7 +209,7 @@ async function route() {
   const parts = path.split("/").filter(Boolean);
   const params = new URLSearchParams(qs || "");
   $$(".gnav-links a").forEach((a) => a.classList.toggle("active", a.dataset.r === (parts[0] || "home") || (parts[0] === "league" && ((a.dataset.r === "cl" && parts[1] === "CL") || (a.dataset.r === "nl" && parts[1] === "NL")))));
-  { const homeNow = !parts.length, keep = homeNow && window.__wasHome; window.__wasHome = homeNow; if (!keep) window.scrollTo({ top: 0 }); }
+  { const homeNow = !parts.length, base = parts[0] + "/" + parts[1], keep = (homeNow && window.__wasHome) || (!homeNow && window.__lastBase === base); window.__wasHome = homeNow; window.__lastBase = homeNow ? "" : base; if (!keep) window.scrollTo({ top: 0 }); }
   try {
     if (!parts.length) await viewHome(params);
     else if (parts[0] === "league") await viewLeague(parts[1], parts[2] || "overview", params);

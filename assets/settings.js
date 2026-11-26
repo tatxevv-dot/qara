@@ -121,7 +121,7 @@ body{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
   }
 })();
 
-/* qara: section tabs (.localnav) merge into the header once they reach it */
+/* qara: section tabs (.localnav) — glass layer fades in once they reach the header */
 (function () {
   let raf = 0;
   const upd = () => {
@@ -129,12 +129,19 @@ body{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
     const n = document.querySelector("#app .localnav");
     if (!n) return;
     const st = parseFloat(getComputedStyle(n).top) || 0;
-    n.classList.toggle("stuck", window.scrollY > 12 && n.getBoundingClientRect().top <= st + 1);
+    const on = window.scrollY > 12 && n.getBoundingClientRect().top <= st + 0.5;
+    if (!n.dataset.q) { // fresh element: set state without animating
+      n.dataset.q = "1"; n.style.setProperty("--qt", "0s");
+      n.classList.toggle("stuck", on);
+      return;
+    }
+    if (n.classList.contains("stuck") !== on) n.classList.toggle("stuck", on);
   };
   const tick = () => { if (!raf) raf = requestAnimationFrame(upd); };
   window.addEventListener("scroll", tick, { passive: true });
   window.addEventListener("resize", tick);
-  window.addEventListener("hashchange", () => setTimeout(tick, 60));
-  new MutationObserver(tick).observe(document.documentElement, { childList: true, subtree: true });
+  window.addEventListener("hashchange", () => { tick(); setTimeout(tick, 150); setTimeout(tick, 600); });
+  const app = document.getElementById("app");
+  if (app) new MutationObserver(tick).observe(app, { childList: true, subtree: true });
   tick();
 })();
