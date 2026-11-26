@@ -120,3 +120,21 @@ body{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
     sync();
   }
 })();
+
+/* qara: section tabs (.localnav) merge into the header once they reach it */
+(function () {
+  let raf = 0;
+  const upd = () => {
+    raf = 0;
+    const n = document.querySelector("#app .localnav");
+    if (!n) return;
+    const st = parseFloat(getComputedStyle(n).top) || 0;
+    n.classList.toggle("stuck", window.scrollY > 12 && n.getBoundingClientRect().top <= st + 1);
+  };
+  const tick = () => { if (!raf) raf = requestAnimationFrame(upd); };
+  window.addEventListener("scroll", tick, { passive: true });
+  window.addEventListener("resize", tick);
+  window.addEventListener("hashchange", () => setTimeout(tick, 60));
+  new MutationObserver(tick).observe(document.documentElement, { childList: true, subtree: true });
+  tick();
+})();
