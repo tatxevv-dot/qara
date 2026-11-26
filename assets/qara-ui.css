@@ -2,17 +2,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&family=Unbounded:wght@500;600;700&display=swap&subset=cyrillic');
 :root{
   --font-display:"Unbounded","Onest",-apple-system,"Segoe UI",sans-serif;
-  --bg:#f4f6f3;--bg-elev:#fff;--bg-sunk:#eef1ec;--fill:#e6ebe4;--fill-2:#eff2ed;
-  --text:#0d1411;--text-2:#4a5650;--text-3:#6b776f;
-  --line:#d5dcd3;--line-2:rgba(13,20,17,.09);
+  --bg:#f8f6f1;--bg-elev:#fffdfa;--bg-sunk:#f2efe8;--fill:#ebe7de;--fill-2:#f3f0e9;
+  --text:#16130f;--text-2:#57524a;--text-3:#767068;
+  --line:#e0dacf;--line-2:rgba(40,30,15,.08);
   --accent:#0a8f52;--accent-hover:#0ca85f;--accent-press:#077a45;--link:#087a47;
   --accent-soft:rgba(10,143,82,.11);--accent-ring:rgba(10,143,82,.34);
   --live:#e5352b;--win:#0a8f52;--loss:#e5352b;--warn:#d98b00;
   --home:#0a8f52;--away:#e8683a;
-  --nav-bg:rgba(244,246,243,.82);--nav-text:rgba(13,20,17,.76);
-  --glow-a:rgba(10,143,82,.13);--glow-b:rgba(232,104,58,.06);
+  --nav-bg:rgba(248,246,241,.86);--nav-text:rgba(22,19,15,.78);
+  --glow-a:rgba(255,246,225,.7);--glow-b:rgba(255,240,222,.5);
   --pitch:#2f8f4e;--pitch-2:#2a8448;
-  --sk-base:#e8ece6;--sk-shine:#f6f8f4;
+  --sk-base:#ece8df;--sk-shine:#f8f5ee;
   --shadow-xs:0 1px 2px rgba(13,20,17,.05);
   --shadow:0 1px 2px rgba(13,20,17,.04),0 8px 24px -8px rgba(13,20,17,.10);
   --shadow-lg:0 28px 70px rgba(13,20,17,.2);
@@ -173,13 +173,13 @@ a,button,.card[onclick],[role="button"],.mrow,.fx{cursor:pointer}
 /* ===== v3: stadium-night redesign — total restyle ===== */
 html{background:#060a08}
 body{background:#060a08}
-html[data-theme="light"] body,html[data-theme="light"]{background:#eef2ec}
+html[data-theme="light"] body,html[data-theme="light"]{background:#f8f6f1}
 body::before{background:
   radial-gradient(1100px 600px at 85% -10%,rgba(46,229,157,.20),transparent 60%),
   radial-gradient(800px 500px at -10% 10%,rgba(255,138,92,.10),transparent 60%),
   repeating-linear-gradient(90deg,rgba(255,255,255,.022) 0 2px,transparent 2px 120px),
   var(--bg)}
-html[data-theme="light"] body::before{background:radial-gradient(1100px 600px at 85% -10%,rgba(10,143,82,.16),transparent 60%),repeating-linear-gradient(90deg,rgba(13,20,17,.03) 0 2px,transparent 2px 120px),var(--bg)}
+html[data-theme="light"] body::before{background:var(--bg)}
 /* floating pill nav */
 .gnav{position:sticky;top:10px;height:auto;margin:10px auto 0;max-width:min(1180px,calc(100% - 24px));padding:0;border:1px solid var(--line-2);border-radius:999px;background:var(--nav-bg);box-shadow:0 18px 50px -18px rgba(0,0,0,.55);backdrop-filter:saturate(180%) blur(26px);-webkit-backdrop-filter:saturate(180%) blur(26px)}
 .gnav.scrolled{box-shadow:0 22px 60px -16px rgba(0,0,0,.7);border-color:var(--line)}
@@ -498,3 +498,7 @@ html[data-theme="dark"] .hero,html[data-theme="dark"] .mh{background:var(--bg-el
 #app .localnav a.on,#app .localnav a.active,#app .localnav .tabs a.on{color:var(--text);background:none!important;box-shadow:inset 0 -2px 0 var(--accent)}
 @media (max-width:900px){#app .localnav{top:56px;flex-wrap:nowrap;gap:6px;border-radius:0!important}}
 .gnav{z-index:110}
+
+/* milky-white light theme: no green tint on surfaces */
+html[data-theme="light"] .qm,html[data-theme="light"] .mh,html[data-theme="light"] .hero{background:var(--bg-elev)!important}
+html[data-theme="light"] .datebar,html[data-theme="light"] .feed-tools{background:transparent}
