@@ -517,3 +517,15 @@ html[data-theme="dark"] img[src$="logos/fl.svg"],
 html[data-theme="dark"] img[src$="logos/cl.svg"],
 html[data-theme="dark"] img[src$="logos/pl.svg"],
 html[data-theme="dark"] img[src$="logos/nl.svg"]{filter:brightness(0) invert(1)}
+
+/* v15: матчи стоят прямо на плашке лиги — без своих карточек и капсул */
+.mrow{margin:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;transform:none!important;border-top:1px solid var(--line-2)!important}
+.comp-group .mrow:first-of-type,.mrow:first-child{border-top:0!important}
+.mrow:hover,.mrow:not(.live):hover{background:var(--fill-2)!important;transform:none!important;border-color:var(--line-2)!important}
+.mrow.live{background:transparent!important;box-shadow:inset 3px 0 0 var(--live)!important}
+.mrow .mid .sc{background:transparent!important;border:0!important;padding:0!important;min-width:0!important;border-radius:0!important}
+.mrow.live .mid .sc{background:transparent!important;color:var(--live)!important}
+
+/* v15: плавное появление логотипов команд */
+img.crest[data-o]{opacity:0;transition:opacity .45s ease}
+img.crest[data-o].ld{opacity:1}
