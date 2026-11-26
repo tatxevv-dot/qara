@@ -529,3 +529,8 @@ html[data-theme="dark"] img[src$="logos/nl.svg"]{filter:brightness(0) invert(1)}
 /* v15: плавное появление логотипов команд */
 img.crest[data-o]{opacity:0;transition:opacity .45s ease}
 img.crest[data-o].ld{opacity:1}
+
+/* v16: строки матчей — тот же белый фон, что и у плашки лиги; без чёрточки под временем */
+.mrow:not(.live),.mrow:not(.live):hover,.mrow:not(.live):active,.mrow:not(.live):focus{background:transparent!important}
+@media (hover:hover){.mrow:not(.live):hover{background:var(--fill-2)!important}}
+.mrow .mid .tm-time::after{display:none!important}
