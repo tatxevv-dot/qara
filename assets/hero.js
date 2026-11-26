@@ -53,7 +53,20 @@
   const caption = (live, title, sub) => `<div class="hr-cap"><div class="hr-nm">${live ? '<span class="hr-live">LIVE</span>' : ""}<span>${esc(title)}</span></div><div class="hr-sub">${esc(sub)}</div></div>`;
 
   const LC = { PL: ["#3d195b", "#e90052", "#00c26b"], PD: ["#ee3b3b", "#ffb400", "#1a1a3a"], SA: ["#008fd7", "#1a2a6c", "#24c6b8"], BL1: ["#d10214", "#ffffff", "#d10214"], FL1: ["#3b74f6", "#c8d400", "#16130f"], CL: ["#123a8f", "#7b3fe4", "#29c7f0"], NL: ["#27498c", "#e5173f", "#27498c"] };
-  const bigTxt = (id, txt) => { const cs = LC[id] || ["#16130f", "#16130f"], g = "hg" + id; return `<svg class="hr-big" viewBox="0 0 300 100" aria-hidden="true"><defs><linearGradient id="${g}" x1="0" x2="1" y1="0" y2="0">${cs.map((c, i) => `<stop offset="${Math.round((i / (cs.length - 1)) * 100)}%" stop-color="${c}"/>`).join("")}</linearGradient></defs><text x="150" y="80" text-anchor="middle" fill="none" stroke="url(#${g})" stroke-width="1.6" font-size="98" font-weight="900" letter-spacing="-6">${esc(txt)}</text></svg>`; };
+  /* у каждой лиги свой узор из её цветов */
+  function patFor(id, cs, g) {
+    const n = cs.length, R = (x, y, w, h, c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+    const P = (w, h, body, tr) => `<pattern id="${g}" width="${w}" height="${h}" patternUnits="userSpaceOnUse"${true ? ` patternTransform="scale(1.8) ${tr || ""}"` : ""}>${body}</pattern>`;
+    if (id === "BL1") return P(6 * n, 10, cs.map((c, i) => R(i * 6, 0, 6, 10, c)).join(""), "rotate(35)"); /* косые полосы */
+    if (id === "PL") return P(7 * n, 10, cs.map((c, i) => R(i * 7, 0, 7, 10, c)).join("")); /* вертикальные полосы */
+    if (id === "SA") return P(10, 5 * n, cs.map((c, i) => R(0, i * 5, 10, 5, c)).join("")); /* горизонтальные полосы */
+    if (id === "PD") { const k = 7; return P(k * n * 2, k * n * 2, Array.from({ length: n * 2 }, (_, y) => Array.from({ length: n * 2 }, (_, x) => R(x * k, y * k, k, k, cs[(x + y) % n])).join("")).join("")); } /* шахматка */
+    if (id === "FL1") return P(9, 9, R(0, 0, 9, 9, cs[0]) + `<circle cx="4.5" cy="4.5" r="2.6" fill="${cs[1]}"/><circle cx="0" cy="0" r="1.3" fill="${cs[2]}"/><circle cx="9" cy="9" r="1.3" fill="${cs[2]}"/><circle cx="9" cy="0" r="1.3" fill="${cs[2]}"/><circle cx="0" cy="9" r="1.3" fill="${cs[2]}"/>`); /* горох */
+    if (id === "CL") { const h = 5, H = h * n; return P(12, H, cs.map((c, i) => [-H, 0, H].map((o) => `<polyline points="0,${i * h + 3 + o} 6,${i * h - 3 + o} 12,${i * h + 3 + o}" fill="none" stroke="${c}" stroke-width="${h}"/>`).join("")).join("")); } /* шевроны */
+    if (id === "NL") { const k = 6; return P(k * n * 2, k * n * 2, Array.from({ length: n * 2 }, (_, y) => Array.from({ length: n * 2 }, (_, x) => R(x * k, y * k, k, k, cs[(x + y) % n])).join("")).join(""), "rotate(45)"); } /* ромбы */
+    return P(6 * n, 10, cs.map((c, i) => R(i * 6, 0, 6, 10, c)).join(""), "rotate(35)");
+  }
+  const bigTxt = (id, txt) => { const cs = LC[id] || ["#16130f", "#16130f"], g = "hg" + id; return `<svg class="hr-big" viewBox="0 0 300 100" aria-hidden="true"><defs>${patFor(id, cs, g)}</defs><text x="150" y="80" text-anchor="middle" fill="none" stroke="url(#${g})" stroke-width="3.4" font-size="98" font-weight="900" letter-spacing="-6">${esc(txt)}</text></svg>`; };
   function footballBanner(it) {
     const m = it.m, c = comp(m.competition_id), inf = it.info || {};
     const lg = c.logo ? `<img src="${esc(c.logo)}" alt="">` : "";
@@ -172,7 +185,9 @@
 ${SKIN_CSS}
 .hr-sk .hr-card{background:var(--fill);animation:hrp 1.2s ease-in-out infinite alternate}@keyframes hrp{to{opacity:.55}}
 .hr-card.d{container-type:inline-size;background:#ece7de;color:#16130f}
-.hr-big{position:absolute;left:0;top:50%;width:100%;height:auto;transform:translateY(-54%);opacity:.25;pointer-events:none;overflow:visible;font-family:inherit}
+.hr-big{position:absolute;left:0;top:50%;width:100%;height:auto;transform:translateY(-54%);opacity:.14;pointer-events:none;overflow:visible;font-family:inherit;filter:blur(1.4px);animation:hrbig 7s ease-in-out infinite alternate;will-change:transform,filter}
+@keyframes hrbig{0%{transform:translate(-2.5%,-54%) scale(1);filter:blur(1px)}100%{transform:translate(2.5%,-54%) scale(1.03);filter:blur(3px)}}
+@media(prefers-reduced-motion:reduce){.hr-big{animation:none}}
 .hr-top{position:absolute;top:5.5cqw;left:6cqw;right:6cqw;display:flex;justify-content:space-between;align-items:center;font-size:3.4cqw;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(22,19,15,.55)}
 .hr-lgn{display:inline-flex;align-items:center;gap:2cqw;color:#16130f}.hr-lgn img{height:5.5cqw;width:auto;max-width:9cqw;object-fit:contain}
 .hr-card.d .hr-tm{top:17%;height:73%;width:38%;flex-direction:column;justify-content:center;gap:5%}
