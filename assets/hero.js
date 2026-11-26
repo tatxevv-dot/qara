@@ -52,6 +52,7 @@
   const dayLbl = (d) => { const t = new Date(d), n = new Date(); const k = Math.round((new Date(t.getFullYear(), t.getMonth(), t.getDate()) - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 864e5); return (k === 0 ? "Сегодня" : k === 1 ? "Завтра" : dm(d)) + " · " + fmtTime(d); };
   const caption = (live, title, sub) => `<div class="hr-cap"><div class="hr-nm">${live ? '<span class="hr-live">LIVE</span>' : ""}<span>${esc(title)}</span></div><div class="hr-sub">${esc(sub)}</div></div>`;
 
+  const LC = { PL: "75,26,115", PD: "238,91,77", SA: "47,159,192", BL1: "209,2,20", FL1: "59,116,246", CL: "18,58,143", NL: "39,73,140" };
   function footballBanner(it) {
     const m = it.m, c = comp(m.competition_id), inf = it.info || {};
     const lg = c.logo ? `<img src="${esc(c.logo)}" alt="">` : "";
@@ -61,7 +62,7 @@
       const fm = ((i && i.form) || []).map((f) => `<i class="hr-mn ${f.r}" title="${esc(f.n)}">${crest({ crest_url: f.u }, "mn")}</i>`).join("");
       return `<span class="hr-tm ${cls}"><span class="hr-cw">${crest(t, "")}</span><span class="hr-inf">${pos}${fm}</span></span>`;
     };
-    return `<a class="hr-item" href="#/match/${esc(m.id)}"><div class="hr-card d"><span class="hr-big">${big}</span><div class="hr-top"><span class="hr-lgn">${lg}${esc(c.short)}</span><span>${it.live ? "LIVE" : esc(dayLbl(it.date).split(" · ")[0])}</span></div>${side(m.home, inf.h, "l")}${side(m.away, inf.a, "r")}</div>${caption(it.live, nm(m.home) + " — " + nm(m.away), (it.live ? "" : dayLbl(it.date) + " · ") + c.short)}</a>`;
+    return `<a class="hr-item" href="#/match/${esc(m.id)}"><div class="hr-card d" style="--lc:${LC[m.competition_id] || "22,19,15"}"><span class="hr-big">${big}</span><div class="hr-top"><span class="hr-lgn">${lg}${esc(c.short)}</span><span>${it.live ? "LIVE" : esc(dayLbl(it.date).split(" · ")[0])}</span></div>${side(m.home, inf.h, "l")}${side(m.away, inf.a, "r")}</div>${caption(it.live, nm(m.home) + " — " + nm(m.away), (it.live ? "" : dayLbl(it.date) + " · ") + c.short)}</a>`;
   }
   /* место в таблице + последние 3 матча каждой команды (зелёный — победа, красный — поражение, серый — ничья) */
   async function loadInfo(items) {
@@ -170,7 +171,7 @@
 ${SKIN_CSS}
 .hr-sk .hr-card{background:var(--fill);animation:hrp 1.2s ease-in-out infinite alternate}@keyframes hrp{to{opacity:.55}}
 .hr-card.d{container-type:inline-size;background:#ece7de;color:#16130f}
-.hr-big{position:absolute;left:0;right:0;top:50%;transform:translateY(-54%);text-align:center;font-size:36cqw;font-weight:900;letter-spacing:-.06em;line-height:1;color:transparent;-webkit-text-stroke:1.5px rgba(22,19,15,.13);font-variant-numeric:tabular-nums;pointer-events:none}
+.hr-big{position:absolute;left:0;right:0;top:50%;transform:translateY(-54%);text-align:center;font-size:36cqw;font-weight:900;letter-spacing:-.06em;line-height:1;color:transparent;-webkit-text-stroke:1.6px rgba(var(--lc,22,19,15),.55);font-variant-numeric:tabular-nums;pointer-events:none}
 .hr-top{position:absolute;top:5.5cqw;left:6cqw;right:6cqw;display:flex;justify-content:space-between;align-items:center;font-size:3.4cqw;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(22,19,15,.55)}
 .hr-lgn{display:inline-flex;align-items:center;gap:2cqw;color:#16130f}.hr-lgn img{height:5.5cqw;width:auto;max-width:9cqw;object-fit:contain}
 .hr-card.d .hr-tm{top:17%;height:73%;width:38%;flex-direction:column;justify-content:center;gap:5%}
