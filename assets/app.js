@@ -191,6 +191,8 @@ const posRu = (p) => POS_RU[posGroup(p)];
 
 /* ---------------- router ---------------- */
 let refreshTimer = null, charts = [];
+/* обратный отсчёт «До начала» в шапке матча */
+setInterval(() => { document.querySelectorAll(".mh-cd[data-t]").forEach((el) => { const ms = new Date(el.dataset.t) - Date.now(); if (ms <= 0) { el.classList.add("go"); el.innerHTML = "<span>Скоро начнётся</span>"; return; } const t = Math.floor(ms / 1000), d = Math.floor(t / 86400), p = (n) => String(n).padStart(2, "0"), b = el.querySelector("b"); if (b) b.textContent = (d ? d + "д " : "") + p(Math.floor((t % 86400) / 3600)) + ":" + p(Math.floor((t % 3600) / 60)) + ":" + p(t % 60); }); }, 1000);
 function killCharts() { charts.forEach((c) => c.destroy()); charts = []; }
 try { history.scrollRestoration = "manual"; } catch (e) {}
 function scrollTop0() { window.scrollTo({ top: 0, left: 0, behavior: "instant" }); }
@@ -809,7 +811,7 @@ async function viewMatch(id, tab) {
     <div class="card"><div class="mh">
       <a class="compline" href="#/league/${m.competition_id}"><img src="${c?.logo}" alt="">${c?.name} · ${fmtDay(m.utc_date)}, ${fmtTime(m.utc_date)}</a>
       <div class="mh-grid"><a class="mh-team" href="#/team/${m.home.id}">${crest(m.home, "crest lg")}${esc(m.home.name)}</a>
-        <div><div class="mh-score ${played ? "" : "pre"}">${played ? `${m.home_goals} – ${m.away_goals}` : fmtTime(m.utc_date)}</div><div class="mh-status ${live ? "live" : ""}">${live ? `<span class="live-dot"></span> ` : ""}${played || live ? statusLabel(m) : fmtDate(m.utc_date, { weekday: "long", day: "numeric", month: "long" })}</div>${m.raw?.aggregate ? `<div class="mh-status">${esc(m.raw.aggregate)}</div>` : ""}</div>
+        <div><div class="mh-score ${played ? "" : "pre"}">${played ? `${m.home_goals} – ${m.away_goals}` : fmtTime(m.utc_date)}</div><div class="mh-status ${live ? "live" : ""}">${live ? `<span class="live-dot"></span> ` : ""}${played || live ? statusLabel(m) : fmtDate(m.utc_date, { weekday: "long", day: "numeric", month: "long" })}</div>${!played && !live && m.status === "SCHEDULED" ? `<div class="mh-cd" data-t="${esc(m.utc_date)}"><span>До начала</span><b>--:--:--</b></div>` : ""}${m.raw?.aggregate ? `<div class="mh-status">${esc(m.raw.aggregate)}</div>` : ""}</div>
         <a class="mh-team" href="#/team/${m.away.id}">${crest(m.away, "crest lg")}${esc(m.away.name)}</a></div>
       ${goals.length ? `<div class="scorers"><div class="h">${scorerList(m.home_team_id)}</div><div class="ball">${ICON.ball}</div><div class="a">${scorerList(m.away_team_id)}</div></div>` : ""}
       <div class="mh-info">${m.raw?.venue ? `<span>${ICON.pin}${esc(m.raw.venue)}${m.raw.city ? ", " + esc(m.raw.city) : ""}</span>` : ""}${m.raw?.attendance ? `<span>${ICON.users}${Number(m.raw.attendance).toLocaleString("ru-RU")}</span>` : ""}${m.raw?.referee ? `<span>${ICON.whistle}${esc(m.raw.referee)}</span>` : ""}${H && A ? `<span><b>xG</b>&nbsp;${num(H.xg, 2)} – ${num(A.xg, 2)}</span>` : ""}</div>

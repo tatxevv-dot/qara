@@ -534,3 +534,9 @@ img.crest[data-o].ld{opacity:1}
 .mrow:not(.live),.mrow:not(.live):hover,.mrow:not(.live):active,.mrow:not(.live):focus{background:transparent!important}
 @media (hover:hover){.mrow:not(.live):hover{background:var(--fill-2)!important}}
 .mrow .mid .tm-time::after{display:none!important}
+
+/* v17: обратный отсчёт в шапке матча */
+.mh-cd{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:6px 12px;border-radius:99px;background:var(--fill-2);font-size:12px;color:var(--text-3);white-space:nowrap}
+.mh-cd span{font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:10.5px}
+.mh-cd b{font-variant-numeric:tabular-nums;font-size:14px;font-weight:800;color:var(--text);letter-spacing:.02em}
+.mh-cd.go{color:var(--accent)}
