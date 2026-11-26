@@ -53,9 +53,34 @@
   const caption = (live, title, sub) => `<div class="hr-cap"><div class="hr-nm">${live ? '<span class="hr-live">LIVE</span>' : ""}<span>${esc(title)}</span></div><div class="hr-sub">${esc(sub)}</div></div>`;
 
   function footballBanner(it) {
-    const m = it.m, c = comp(m.competition_id), k = skin(m.competition_id);
-    const lg = c.logo ? `<img class="hr-lg ${k.logo}" src="${esc(m.competition_id === "BL1" ? "assets/logos/bl-w.svg" : c.logo)}" alt="">` : "";
-    return `<a class="hr-item" href="#/match/${esc(m.id)}"><div class="hr-card k-${esc(m.competition_id)}"${k.line ? ` style="--ln:${k.line}"` : ""}>${lg}<i class="hr-ln"></i><span class="hr-tm l">${crest(m.home, "")}</span><span class="hr-tm r">${crest(m.away, "")}</span></div>${caption(it.live, nm(m.home) + " — " + nm(m.away), (it.live ? "" : dayLbl(it.date) + " · ") + c.short)}</a>`;
+    const m = it.m, c = comp(m.competition_id), inf = it.info || {};
+    const lg = c.logo ? `<img src="${esc(c.logo)}" alt="">` : "";
+    const big = it.live ? `${m.home_goals ?? 0}:${m.away_goals ?? 0}` : new Date(m.utc_date).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+    const side = (t, i, cls) => {
+      const pos = i && i.pos ? `<b class="hr-pl">${i.pos}</b>` : "";
+      const fm = ((i && i.form) || []).map((f) => `<i class="hr-mn ${f.r}" title="${esc(f.n)}">${crest({ crest_url: f.u }, "mn")}</i>`).join("");
+      return `<span class="hr-tm ${cls}"><span class="hr-cw">${crest(t, "")}</span><span class="hr-inf">${pos}${fm}</span></span>`;
+    };
+    return `<a class="hr-item" href="#/match/${esc(m.id)}"><div class="hr-card d"><span class="hr-big">${big}</span><div class="hr-top"><span class="hr-lgn">${lg}${esc(c.short)}</span><span>${it.live ? "LIVE" : esc(dayLbl(it.date).split(" · ")[0])}</span></div>${side(m.home, inf.h, "l")}${side(m.away, inf.a, "r")}</div>${caption(it.live, nm(m.home) + " — " + nm(m.away), (it.live ? "" : dayLbl(it.date) + " · ") + c.short)}</a>`;
+  }
+  /* место в таблице + последние 3 матча каждой команды (зелёный — победа, красный — поражение, серый — ничья) */
+  async function loadInfo(items) {
+    const ids = [...new Set(items.flatMap((i) => [i.m.home && i.m.home.id, i.m.away && i.m.away.id]).filter(Boolean))];
+    if (!ids.length) return;
+    const pos = {}, form = {};
+    try { (await Q(sb.from("standings").select("team_id,competition_id,position").in("team_id", ids).in("competition_id", [...new Set(items.map((i) => i.m.competition_id))]))).forEach((r) => { pos[r.competition_id + ":" + r.team_id] = r.position; }); } catch (e) {}
+    try {
+      const rows = await Q(sb.from("matches").select(M_SEL).eq("status", "FINISHED").or(`home_team_id.in.(${ids.join(",")}),away_team_id.in.(${ids.join(",")})`).order("utc_date", { ascending: false }).limit(Math.min(1000, ids.length * 8)));
+      rows.forEach((x) => {
+        if (x.home_goals == null || x.away_goals == null) return;
+        [[x.home_team_id, x.home_goals, x.away_goals, x.away], [x.away_team_id, x.away_goals, x.home_goals, x.home]].forEach(([id, gf, ga, opp]) => {
+          if (!ids.includes(id) || !opp) return;
+          const a = form[id] || (form[id] = []);
+          if (a.length < 3) a.push({ r: gf > ga ? "w" : gf < ga ? "l" : "d", u: crestSrc(opp.crest_url), n: nm(opp) });
+        });
+      });
+    } catch (e) {}
+    items.forEach((i) => { const k = (t) => ({ pos: pos[i.m.competition_id + ":" + t.id], form: form[t.id] || [] }); i.info = { h: k(i.m.home), a: k(i.m.away) }; });
   }
   function mmaBanner(it) {
     const { e, f1, f2 } = it, label = e.name.split(":")[0].trim(), last = (f) => (f ? f.name.split(" ").slice(-1)[0] : "—");
@@ -71,7 +96,8 @@
     const items = await Promise.all(pick.slice(0, 10).map(async (m) => ({ kind: "f", m, date: m.utc_date, live: LIVE(m) })));
     const all = [...items, ...mm].sort((a, b) => (b.live - a.live) || (new Date(a.date) - new Date(b.date))).slice(0, 10);
     if (!all.length) return "";
-    const urls = []; all.forEach((i) => { if (i.kind === "m") { [i.f1, i.f2].forEach((f) => f && urls.push(f.body_url || f.photo_url)); } else [i.m.home, i.m.away].forEach((t) => t && urls.push(crestSrc(t.crest_url))); });
+    try { await loadInfo(all.filter((i) => i.kind !== "m")); } catch (e) {}
+    const urls = []; all.forEach((i) => { if (i.kind === "m") { [i.f1, i.f2].forEach((f) => f && urls.push(f.body_url || f.photo_url)); } else { [i.m.home, i.m.away].forEach((t) => t && urls.push(crestSrc(t.crest_url))); const f = i.info || {}; [f.h, f.a].forEach((x) => x && x.form.forEach((y) => urls.push(y.u))); } });
     await window.preloadImgs(urls, 3000);
     return `<section class="hr"><div class="hr-h"><h2>Скоро в эфире</h2><a href="#/streams">все ›</a></div><div class="hr-wrap"><div class="hr-scroll">${all.map((i) => (i.kind === "m" ? mmaBanner(i) : footballBanner(i))).join("")}</div></div></section>`;
   }
@@ -143,6 +169,20 @@
 .hr-card{position:relative;aspect-ratio:1.78/1;border-radius:22px;overflow:hidden;color:#fff;background:#20233a}
 ${SKIN_CSS}
 .hr-sk .hr-card{background:var(--fill);animation:hrp 1.2s ease-in-out infinite alternate}@keyframes hrp{to{opacity:.55}}
+.hr-card.d{container-type:inline-size;background:#ece7de;color:#16130f}
+.hr-big{position:absolute;left:0;right:0;top:50%;transform:translateY(-54%);text-align:center;font-size:36cqw;font-weight:900;letter-spacing:-.06em;line-height:1;color:transparent;-webkit-text-stroke:1.5px rgba(22,19,15,.13);font-variant-numeric:tabular-nums;pointer-events:none}
+.hr-top{position:absolute;top:5.5cqw;left:6cqw;right:6cqw;display:flex;justify-content:space-between;align-items:center;font-size:3.4cqw;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(22,19,15,.55)}
+.hr-lgn{display:inline-flex;align-items:center;gap:2cqw;color:#16130f}.hr-lgn img{height:5.5cqw;width:auto;max-width:9cqw;object-fit:contain}
+.hr-card.d .hr-tm{top:17%;height:73%;width:38%;flex-direction:column;justify-content:center;gap:5%}
+.hr-card.d .hr-tm.l{left:6%}.hr-card.d .hr-tm.r{right:6%}
+.hr-cw{display:block;width:100%;height:58%}
+.hr-card.d .hr-cw img{width:100%!important;height:100%!important;object-fit:contain;filter:drop-shadow(0 1.5cqw 3cqw rgba(0,0,0,.22))}
+.hr-inf{display:flex;align-items:center;justify-content:center;gap:1.6cqw;height:7.4cqw}
+.hr-pl{min-width:7.4cqw;height:7.4cqw;padding:0 1.6cqw;border-radius:99px;background:#16130f;color:#fff;font-size:3.4cqw;font-weight:800;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}.hr-pl::before{content:"#";opacity:.55;margin-right:.3cqw}
+.hr-mn{width:7.4cqw;height:7.4cqw;border-radius:2cqw;display:inline-flex;align-items:center;justify-content:center;background:rgba(22,19,15,.08);box-shadow:inset 0 0 0 1px rgba(22,19,15,.12)}
+.hr-mn.w{background:rgba(29,154,75,.2);box-shadow:inset 0 0 0 1px rgba(29,154,75,.55)}
+.hr-mn.l{background:rgba(214,45,45,.18);box-shadow:inset 0 0 0 1px rgba(214,45,45,.55)}
+.hr-card.d .hr-mn img{width:5cqw!important;height:5cqw!important;object-fit:contain;filter:none}
 .hr-lg{position:absolute;left:50%;top:9%;height:19%;max-width:40%;transform:translateX(-50%);object-fit:contain}
 .hr-lg.w{filter:brightness(0) invert(1)}
 .hr-ln{position:absolute;left:50%;top:38%;height:50%;width:2px;margin-left:-1px;border-radius:2px;background:var(--ln,#fff)}
