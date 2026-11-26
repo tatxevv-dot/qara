@@ -22,7 +22,7 @@
   const isDone = (x) => x.status === "FINISHED" || !!x.winner_id || !!x.method;
   const FSEL = "id,name,nickname,country,country_code,photo_url,wins,losses,draws,no_contests,weight_class";
 
-  const subnav = (cur, tab) => { const on = (k) => (cur === k ? " on" : ""); return `<nav class="mm-seg" aria-label="Разделы UFC"><a href="#/mma" class="${cur === "sched" && tab !== "past" ? "on" : ""}">Ближайшие</a><a href="#/mma?t=past" class="${cur === "sched" && tab === "past" ? "on" : ""}">Прошедшие</a><a href="#/mma/rankings" class="${on("rank").trim()}">Рейтинги</a></nav>`; };
+  const subnav = (cur, tab) => { const on = (k) => (cur === k ? " on" : ""); return `<nav class="mm-seg" aria-label="Разделы UFC"><a href="#/mma" class="${cur === "sched" && tab !== "past" ? "on" : ""}">Афиша</a><a href="#/mma?t=past" class="${cur === "sched" && tab === "past" ? "on" : ""}">Архив</a><a href="#/mma/rankings" class="${on("rank").trim()}">Рейтинги и чемпионы</a></nav>`; };
   const head = (t, s) => `<div class="mm-h"><h1>${t}</h1>${s ? `<p>${s}</p>` : ""}</div>`;
 
   /* ---------- карты бойца в строке боя ---------- */
@@ -109,7 +109,7 @@
     if (tab === "up") {
       const [h, ...rest] = ev; h.cnt = cnt[h.id]; const m = main[h.id];
       const pr = progress(fights.filter((x) => x.event_id === h.id), isLive(h));
-      const shown = hero(h, m, m && fs[m.fighter1_id], m && fs[m.fighter2_id], hasS.has(String(h.id)), pr) + (rest.length ? `<h3 class="mm-sec">Дальше в календаре</h3><div class="card mm-list">${rows(rest)}</div>` : "");
+      const shown = hero(h, m, m && fs[m.fighter1_id], m && fs[m.fighter2_id], hasS.has(String(h.id)), pr) + (rest.length ? `<h3 class="mm-sec">Следующие турниры</h3><div class="card mm-list">${rows(rest)}</div>` : "");
       L.innerHTML = shown;
       /* live: обновляем данные без перерисовки скелета, пока турнир идёт или вот-вот начнётся */
       stopPoll(); if (isLive(h) || (new Date(h.start_time) - Date.now() < 36e5 && h.status !== "FINISHED")) pollT = setTimeout(() => { if (/^#\/mma\/?(\?t=up)?$/.test(location.hash) || location.hash === "#/mma") viewSchedule(params, true).catch(() => {}); }, 30000);
@@ -206,7 +206,7 @@
     const live = isLive(e), pr = progress(fights, live);
     const groups = {}; fights.forEach((x) => (groups[x.card_section || "main"] ||= []).push(x));
     const blocks = ["main", "prelim", "early"].filter((k) => groups[k]).map((k) =>
-      `<div class="card mm-sec"><div class="card-h">${SECT[k]}</div>${groups[k].map((x) => fightRow(x, fs[x.fighter1_id], fs[x.fighter2_id])).join("")}</div>`).join("");
+      `<div class="card mm-sec mm-s-${k}"><div class="card-h">${SECT[k]}</div>${groups[k].map((x) => fightRow(x, fs[x.fighter1_id], fs[x.fighter2_id])).join("")}</div>`).join("");
     if (quiet) {
       if (curEventId() !== String(id)) return;
       const w = root().querySelector(".wrap.mm"); if (!w) return;
@@ -214,7 +214,7 @@
       const after = w.querySelector("#mmTop") || w.querySelector(".mm-h"); [...t.children].reverse().forEach((n) => after.after(n));
       const lb = w.querySelector(".mm-evlive"); if (lb) lb.innerHTML = liveBar(live, pr);
     } else {
-    set(`<div class="wrap mm"><a class="mm-back" href="#/mma">← Все карды</a>
+    set(`<div class="wrap mm"><a class="mm-back" href="#/mma">← К афише</a>
       ${head(E(e.name), `${fmtD(e.start_time, { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · ${fmtT(e.start_time)}<br>${E([e.venue, e.city, e.country].filter(Boolean).join(", "))}`)}
       <div class="mm-evlive">${liveBar(live, pr)}</div>
       ${blocks || `<div class="card"><div class="empty-note">Бои ещё не объявлены.</div></div>`}</div>`);
@@ -262,26 +262,26 @@
       <div class="card mm-prof"><div class="mm-ptop">${ph(f, "mm-ph big")}<div><h1>${E(f.name)}</h1>${f.nickname ? `<p>«${E(f.nickname)}»</p>` : ""}<div class="mm-tags"><span>${E(wcRu(f.weight_class))}</span>${rkTxt ? `<span class="hl">${rkTxt}</span>` : ""}${f.country ? `<span>${flag(f.country_code)} ${E(f.country)}</span>` : ""}</div></div></div>
         <div class="mm-rec"><b>${rec(f)}</b><small>В-П-Н</small></div></div>
       <div class="mm-grid">
-        <div class="card"><div class="card-h">Данные</div><div class="mm-kvs">${kv("Возраст", age(f.birth_date))}${kv("Рост", f.height_cm && f.height_cm + " см")}${kv("Размах рук", f.reach_cm && f.reach_cm + " см")}${kv("Стойка", STANCE[f.stance] || f.stance)}${kv("Страна", f.country)}</div></div>
-        <div class="card"><div class="card-h">Победы по методам</div><div class="mm-seg-w">${seg(f.ko_wins, "ko", "КО/ТКО")}${seg(f.sub_wins, "sub", "Сабмишн")}${seg(f.dec_wins, "dec", "Решение")}</div><div style="height:14px"></div></div>
-        <div class="card"><div class="card-h">Удары</div><div class="mm-bars">${bar("Поражённых за минуту", f.sig_strikes_per_min)}${bar("Точность", f.strike_accuracy, "%")}${bar("Пропущено за минуту", f.sig_strikes_absorbed_per_min)}${bar("Защита", f.strike_defense, "%")}</div></div>
-        <div class="card"><div class="card-h">Борьба</div><div class="mm-bars">${bar("Тейкдауны за 15 мин", f.td_per_15)}${bar("Точность тейкдаунов", f.td_accuracy, "%")}${bar("Защита от тейкдаунов", f.td_defense, "%")}${bar("Сабмишны за 15 мин", f.sub_per_15)}</div></div>
+        <div class="card"><div class="card-h">Досье</div><div class="mm-kvs">${kv("Возраст", age(f.birth_date))}${kv("Рост", f.height_cm && f.height_cm + " см")}${kv("Размах рук", f.reach_cm && f.reach_cm + " см")}${kv("Стойка", STANCE[f.stance] || f.stance)}${kv("Страна", f.country)}</div></div>
+        <div class="card"><div class="card-h">Чем побеждает</div><div class="mm-seg-w">${seg(f.ko_wins, "ko", "КО/ТКО")}${seg(f.sub_wins, "sub", "Сабмишн")}${seg(f.dec_wins, "dec", "Решение")}</div><div style="height:14px"></div></div>
+        <div class="card"><div class="card-h">Ударная работа</div><div class="mm-bars">${bar("Поражённых за минуту", f.sig_strikes_per_min)}${bar("Точность", f.strike_accuracy, "%")}${bar("Пропущено за минуту", f.sig_strikes_absorbed_per_min)}${bar("Защита", f.strike_defense, "%")}</div></div>
+        <div class="card"><div class="card-h">Борцовская работа</div><div class="mm-bars">${bar("Тейкдауны за 15 мин", f.td_per_15)}${bar("Точность тейкдаунов", f.td_accuracy, "%")}${bar("Защита от тейкдаунов", f.td_defense, "%")}${bar("Сабмишны за 15 мин", f.sub_per_15)}</div></div>
       </div>
-      ${next ? `<div class="card"><div class="card-h">Предстоящие бои</div>${next}</div>` : ""}
+      ${next ? `<div class="card"><div class="card-h">Главные бои вечера</div>${next}</div>` : ""}
       <div class="card"><div class="card-h">История боёв</div>${hist || `<div class="empty-note">Нет данных о боях.</div>`}</div></div>`);
   }
 
   /* ---------- рейтинги ---------- */
   async function viewRankings(wc) {
     wc = wc ? decodeURIComponent(wc) : "Lightweight";
-    set(`<div class="wrap mm">${head("Рейтинги UFC", "Чемпион и топ-15 дивизиона")}${subnav("rank")}<div class="mm-wc">${WC_ORDER.map((w) => `<a class="pill ${w === wc ? "on" : ""}" href="#/mma/rankings/${encodeURIComponent(w)}">${E(wcRu(w))}</a>`).join("")}</div><div id="mmL">${skel(8)}</div></div>`);
+    set(`<div class="wrap mm">${head("Рейтинги бойцов UFC", "Пояс и топ-15 каждого веса")}${subnav("rank")}<div class="mm-wc">${WC_ORDER.map((w) => `<a class="pill ${w === wc ? "on" : ""}" href="#/mma/rankings/${encodeURIComponent(w)}">${E(wcRu(w))}</a>`).join("")}</div><div id="mmL">${skel(8)}</div></div>`);
     const rk = await Q(sb.from("mma_rankings").select("rank,fighter_id").eq("weight_class", wc).order("rank", { ascending: true }));
     const ids = rk.map((r) => r.fighter_id);
     const fs = {}; if (ids.length) (await Q(sb.from("mma_fighters").select(FSEL).in("id", ids))).forEach((f) => (fs[f.id] = f));
     const row = (r) => { const f = fs[r.fighter_id]; if (!f) return ""; return `<a class="lead mm-rk ${r.rank === 0 ? "ch" : ""}" href="#/mma/fighter/${f.id}"><span class="rk">${r.rank === 0 ? "C" : r.rank}</span>${ph(f)}<div class="who"><div>${E(f.name)}</div><small>${f.nickname ? "«" + E(f.nickname) + "»" : E(f.country || "")}</small></div><span class="v">${rec(f)}</span></a>`; };
     const ch = rk.filter((r) => r.rank === 0), top = rk.filter((r) => r.rank > 0);
     document.getElementById("mmL").innerHTML = rk.length
-      ? `${ch.length ? `<div class="card"><div class="card-h">Чемпион</div>${ch.map(row).join("")}<div style="height:6px"></div></div>` : ""}<div class="card"><div class="card-h">Топ-15</div>${top.map(row).join("")}<div style="height:6px"></div></div>`
+      ? `<div class="mm-rk-grid">${ch.length ? `<div class="card"><div class="card-h">Обладатель пояса</div>${ch.map(row).join("")}<div style="height:6px"></div></div>` : ""}<div class="card"><div class="card-h">Претенденты</div>${top.map(row).join("")}<div style="height:6px"></div></div></div>`
       : `<div class="card"><div class="empty-note">Рейтинг пока пуст.</div></div>`;
   }
 

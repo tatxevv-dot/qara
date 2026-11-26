@@ -107,7 +107,7 @@ function xpts(xgF, xgA) {
 
 /* ---------------- theme / favorites ---------------- */
 function applyTheme() {
-  const t = store.get("theme", "auto");
+  const t = store.get("theme", "dark");
   const dark = t === "dark" || (t === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.dataset.theme = dark ? "dark" : "light";
   const b = $("#themeBtn"); if (b) b.title = { auto: "Тема: авто", light: "Тема: светлая", dark: "Тема: тёмная" }[t];
@@ -281,25 +281,23 @@ async function viewHome(params) {
   }
   const prev = new Date(dayStart); prev.setDate(prev.getDate() - 7); const next = new Date(dayStart); next.setDate(next.getDate() + 7);
   const favs = favTeams();
-  app().innerHTML = `<div class="wrap"><div class="cols">
-    <aside class="left side">
-      <div class="card"><div class="card-h">Топ-турниры</div><nav class="nav-list">${COMPS.map((c) => `<a href="#/league/${c.id}"><img src="${c.logo}" alt="">${c.name}</a>`).join("")}</nav><div style="height:10px"></div></div>
-      <div class="card"><div class="card-h">Избранные команды</div>${favs.length ? `<nav class="nav-list">${favs.map((t) => `<a href="#/team/${t.id}">${crest(t)}${esc(t.name)}</a>`).join("")}</nav><div style="height:10px"></div>` : `<div class="empty-note">Пусто</div>`}</div>
-    </aside>
+  app().innerHTML = `<div class="wrap"><section class="qm"><div class="qm-l"><span class="qm-k">${sel.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" })}</span><h1 class="qm-t">Футбол<br><em>без паузы</em></h1><p class="qm-s">Матчи, таблицы и xG топ-5 лиг и Лиги чемпионов в одном месте.</p></div><div class="qm-r"><div class="qm-n"><b id="qLive">–</b><span>в эфире</span></div><div class="qm-n"><b id="qCnt">–</b><span>матчей за день</span></div><div class="qm-n"><b>6</b><span>турниров</span></div></div></section><nav class="qchips" aria-label="Турниры">${COMPS.map((c) => `<a href="#/league/${c.id}"><img src="${c.logo}" alt="">${c.name}</a>`).join("")}</nav>
+    <div class="cols two">
     <main>
       <div class="card" id="feed">
         <div class="datebar"><a class="arrow" href="#/?d=${iso(prev)}" aria-label="Неделя назад">${ICON.chevL}</a><div class="dates">${dates}</div><a class="arrow" href="#/?d=${iso(next)}" aria-label="Неделя вперёд">${ICON.chevR}</a></div>
         <div class="feed-tools">
-          <div class="seg" id="fseg"><button data-f="all">Все</button><button data-f="live"><span class="live-toggle"><span class="live-dot"></span>Live</span></button><button data-f="fav">Избранное</button></div>
+          <div class="seg" id="fseg"><button data-f="all">Все матчи</button><button data-f="live"><span class="live-toggle"><span class="live-dot"></span>Live</span></button><button data-f="fav">Мои</button></div>
           <div class="seg" id="sseg" style="margin-left:auto"><button data-s="comp">Турниры</button><button data-s="time">Время</button></div>
         </div>
         <div id="feedBody">${skel(8)}</div>
       </div>
     </main>
     <aside class="side" id="rightCol">
-      <div class="card" id="miniTable"><div class="card-h">Таблица</div>${skel(6)}</div>
-      <div class="card" id="potw"><div class="card-h">Лучшие игроки недели</div>${skel(4)}</div>
-      <div class="card" id="xgLead"><div class="card-h">Лидеры по xG</div>${skel(4)}</div>
+      <div class="card"><div class="card-h">Мои команды</div>${favs.length ? `<nav class="nav-list">${favs.map((t) => `<a href="#/team/${t.id}">${crest(t)}${esc(t.name)}</a>`).join("")}</nav><div style="height:10px"></div>` : `<div class="empty-note">Добавьте команды в избранное — они появятся здесь.</div>`}</div>
+      <div class="card" id="miniTable"><div class="card-h">Турнирная таблица</div>${skel(6)}</div>
+      <div class="card" id="potw"><div class="card-h">Герои недели</div>${skel(4)}</div>
+      <div class="card" id="xgLead"><div class="card-h">Топ по xG</div>${skel(4)}</div>
     </aside>
   </div></div>`;
   const setSeg = () => { $$("#fseg button").forEach((b) => b.classList.toggle("on", b.dataset.f === state.filter)); $$("#sseg button").forEach((b) => b.classList.toggle("on", b.dataset.s === state.sort)); };
@@ -311,7 +309,8 @@ async function viewHome(params) {
     if (state.filter === "live") list = list.filter((m) => m.status === "LIVE" || m.status === "PAUSED");
     if (state.filter === "fav") { const ft = new Set(favTeams().map((t) => t.id)), fm = new Set(favMatches()); list = list.filter((m) => fm.has(m.id) || ft.has(m.home_team_id) || ft.has(m.away_team_id)); }
     const body = $("#feedBody"); if (!body) return;
-    if (!list.length) { body.innerHTML = `<div class="empty-note" style="padding:28px 18px;text-align:center">${state.filter === "live" ? "Сейчас нет матчей в прямом эфире." : state.filter === "fav" ? "Нет матчей избранных команд в этот день." : "В этот день нет матчей"}<div id="nearBtns" style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap"></div></div>`; if (state.filter === "all") nearDays(); return; }
+    { const ql = $("#qLive"), qc = $("#qCnt"); if (ql) ql.textContent = matches.filter((m) => m.status === "LIVE" || m.status === "PAUSED").length; if (qc) qc.textContent = matches.length; }
+    if (!list.length) { body.innerHTML = `<div class="empty-note" style="padding:28px 18px;text-align:center">${state.filter === "live" ? "Сейчас нет матчей в прямом эфире." : state.filter === "fav" ? "Нет матчей избранных команд в этот день." : "В этот день матчей нет — загляните в соседние даты"}<div id="nearBtns" style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap"></div></div>`; if (state.filter === "all") nearDays(); return; }
     if (state.sort === "time") { body.innerHTML = `<div class="comp-group">${list.map((m) => matchRow(m)).join("")}</div>`; return; }
     body.innerHTML = COMPS.map((c) => {
       const ms = list.filter((m) => m.competition_id === c.id); if (!ms.length) return "";
@@ -345,7 +344,7 @@ async function homeRight() {
   const drawTable = async () => {
     const box = $("#miniTable"); if (!box) return;
     const st = await getStandings(cur);
-    box.innerHTML = `<div class="card-h">Таблица<a class="more" href="#/league/${cur}/table">Полностью</a></div>
+    box.innerHTML = `<div class="card-h">Турнирная таблица<a class="more" href="#/league/${cur}/table">Вся таблица</a></div>
       <div style="padding:0 14px 10px;overflow-x:auto"><div class="seg" id="mseg">${COMPS.map((c) => `<button data-c="${c.id}" class="${c.id === cur ? "on" : ""}" title="${esc(c.name)}" style="flex:1;display:grid;place-items:center"><img src="${c.logo}" alt="${esc(c.short)}" style="width:18px;height:18px;object-fit:contain;display:block"></button>`).join("")}</div></div>
       <table class="tbl"><thead><tr><th>#</th><th class="l">Команда</th><th>И</th><th>+/-</th><th>О</th></tr></thead><tbody>
       ${(() => {
@@ -364,18 +363,18 @@ async function homeRight() {
   const since = new Date(Date.now() - 7 * 86400000).toISOString();
   run(sb.from("player_match_stats").select("rating,goals,assists,player_id,player:players(name),team:teams(name,short_name,crest_url),m:matches!inner(utc_date,competition_id)").gte("m.utc_date", since).not("rating", "is", null).order("rating", { ascending: false }).limit(6)).then((rows) => {
     const box = $("#potw"); if (!box) return;
-    box.innerHTML = `<div class="card-h">Лучшие игроки недели<span class="more muted">qara рейтинг</span></div>` + (rows.length ? rows.map((r) => `<a class="lead" href="#/player/${r.player_id}">${avatar(r.player_id, r.player?.name)}<div class="who"><div>${esc(r.player?.name)}</div><small>${esc([r.team?.short_name || r.team?.name, COMP[r.m.competition_id]?.short, r.goals ? r.goals + " г" : "", r.assists ? r.assists + " а" : ""].filter(Boolean).join(" · "))}</small></div>${ratingChip(r.rating)}</a>`).join("") + `<div style="height:8px"></div>` : `<div class="empty-note">Нет сыгранных матчей за 7 дней.</div>`);
+    box.innerHTML = `<div class="card-h">Герои недели<span class="more muted">qara рейтинг</span></div>` + (rows.length ? rows.map((r) => `<a class="lead" href="#/player/${r.player_id}">${avatar(r.player_id, r.player?.name)}<div class="who"><div>${esc(r.player?.name)}</div><small>${esc([r.team?.short_name || r.team?.name, COMP[r.m.competition_id]?.short, r.goals ? r.goals + " г" : "", r.assists ? r.assists + " а" : ""].filter(Boolean).join(" · "))}</small></div>${ratingChip(r.rating)}</a>`).join("") + `<div style="height:8px"></div>` : `<div class="empty-note">Нет сыгранных матчей за 7 дней.</div>`);
   });
   run(sb.from("v_player_season").select("player_id,name,team_short,crest_url,xg,goals,competition_id").order("xg", { ascending: false }).limit(6)).then((rows) => {
     const box = $("#xgLead"); if (!box) return;
-    box.innerHTML = `<div class="card-h">Лидеры по xG<a class="more" href="#/stats">Вся статистика</a></div>` + rows.map((r, i) => `<a class="lead" href="#/player/${r.player_id}"><span class="rk">${i + 1}</span>${avatar(r.player_id, r.name)}<div class="who"><div>${esc(r.name)}</div><small>${esc(r.team_short)} · ${COMP[r.competition_id]?.short} · ${r.goals} голов</small></div><span class="v">${num(r.xg, 1)}</span></a>`).join("") + `<div style="height:8px"></div>`;
+    box.innerHTML = `<div class="card-h">Топ по xG<a class="more" href="#/stats">Вся статистика</a></div>` + rows.map((r, i) => `<a class="lead" href="#/player/${r.player_id}"><span class="rk">${i + 1}</span>${avatar(r.player_id, r.name)}<div class="who"><div>${esc(r.name)}</div><small>${esc(r.team_short)} · ${COMP[r.competition_id]?.short} · ${r.goals} голов</small></div><span class="v">${num(r.xg, 1)}</span></a>`).join("") + `<div style="height:8px"></div>`;
   });
 }
 
 /* ================= LEAGUE ================= */
 async function viewLeague(id, tab, params) {
   const c = COMP[id]; if (!c) return viewHome(params);
-  const tabs = [["overview", "Обзор"], ["table", "Таблица"], ["matches", "Матчи"], ["players", "Игроки"], ["teams", "Команды"], ["xg", "xG-аналитика"]];
+  const tabs = [["overview", "Главное"], ["table", "Таблица"], ["matches", "Календарь"], ["players", "Игроки"], ["teams", "Клубы"], ["xg", "xG"]];
   app().innerHTML = `<div class="wrap">${localnav(`<img src="${c.logo}" class="crest" alt=""><span class="t">${c.name}</span>`, tabs, tab, `#/league/${id}`)}
     <div id="lbody">${tab === "overview" ? `<div class="card"><div class="hero"><img src="${c.logo}" class="crest lg" alt=""><div class="meta"><h1 class="title">${c.name}</h1></div></div><div style="height:24px"></div></div><div class="section-gap"></div>` : ""}<div id="lcontent">${skel(10)}</div></div></div>`;
   const box = $("#lcontent");
@@ -397,16 +396,16 @@ async function leagueOverview(id, box) {
     const rows = ps.filter(filt).sort((a, b) => b[k] - a[k]).slice(0, 5);
     return `<div class="card"><div class="card-h">${label}<a class="more" href="#/league/${id}/players?s=${k}">Все</a></div>${rows.map((r, i) => `<a class="lead" href="#/player/${r.player_id}"><span class="rk">${i + 1}</span>${avatar(r.player_id, r.name)}<div class="who"><div>${esc(r.name)}</div><small>${esc(r.team_short)}</small></div><span class="v">${num(r[k], d)}</span></a>`).join("")}<div style="height:8px"></div></div>`;
   };
-  box.innerHTML = `<div class="cols two"><main>
-      ${live.length ? `<div class="card"><div class="card-h"><span class="live-dot"></span> Сейчас в эфире</div>${live.map((m) => matchRow(m)).join("")}<div style="height:8px"></div></div>` : ""}
-      <div class="card"><div class="card-h">Таблица<a class="more" href="#/league/${id}/table">Подробно</a></div>${standingsTable(st, null, { compact: true })}</div>
+  box.innerHTML = `${live.length ? `<div class="card"><div class="card-h"><span class="live-dot"></span> Играют прямо сейчас</div>${live.map((m) => matchRow(m)).join("")}<div style="height:8px"></div></div><div class="section-gap"></div>` : ""}
+      <div class="leaders-grid">${leaders("goals", "Бомбардиры")}${leaders("assists", "Ассистенты")}${leaders("xg", "Ожидаемые голы (xG)", 2)}${leaders("rating", "qara рейтинг", 2, (r) => r.minutes >= Math.max(180, fin.length / Math.max(1, st.length) * 2 * 45))}</div>
       <div class="section-gap"></div>
-      <div class="leaders-grid">${leaders("goals", "Голы")}${leaders("assists", "Ассисты")}${leaders("xg", "Ожидаемые голы (xG)", 2)}${leaders("rating", "qara рейтинг", 2, (r) => r.minutes >= Math.max(180, fin.length / Math.max(1, st.length) * 2 * 45))}</div>
-    </main>
-    <aside class="side">
-      <div class="card"><div class="card-h">Ближайшие матчи<a class="more" href="#/league/${id}/matches">Все</a></div>${upcoming.map((m) => matchRow(m, { showDate: true })).join("") || `<div class="empty-note">Нет запланированных матчей.</div>`}<div style="height:8px"></div></div>
-      <div class="card"><div class="card-h">Последние результаты</div>${recent.map((m) => matchRow(m, { showDate: true })).join("")}<div style="height:8px"></div></div>
-    </aside></div>`;
+      <div class="cols two"><main>
+        <div class="card"><div class="card-h">Турнирная таблица<a class="more" href="#/league/${id}/table">Вся таблица</a></div>${standingsTable(st, null, { compact: true })}</div>
+      </main>
+      <aside class="side">
+        <div class="card"><div class="card-h">Скоро в эфире<a class="more" href="#/league/${id}/matches">Календарь</a></div>${upcoming.map((m) => matchRow(m, { showDate: true })).join("") || `<div class="empty-note">Запланированных матчей пока нет.</div>`}<div style="height:8px"></div></div>
+        <div class="card"><div class="card-h">Свежие результаты</div>${recent.map((m) => matchRow(m, { showDate: true })).join("")}<div style="height:8px"></div></div>
+      </aside></div>`;
 }
 function standingsTable(st, hl, o = {}) {
   if (!st.length) return `<div class="empty-note">Таблица пока недоступна.</div>`;
@@ -597,9 +596,9 @@ async function viewTeam(id, tab) {
   app().innerHTML = `<div class="wrap">${localnav(`${crest(team)}<span class="t">${esc(team.name)}</span>`, tabs, tab, `#/team/${id}`)}
     <div class="card"><div class="hero">${crest(team, "crest lg")}<div class="meta"><h1 class="title">${esc(team.name)}</h1>
       <p>${comps.map((c) => `${COMP[c.competition_id]?.short}: ${c.position}-е место, ${c.points} очк.`).join(" · ") || ""}</p></div>
-      <div class="hero-actions"><button class="btn ghost ${fav ? "on" : ""}" id="followBtn">${fav ? "✓ Вы следите" : "+ Следить"}</button></div></div><div style="height:24px"></div></div>
+      <div class="hero-actions"><button class="btn ghost ${fav ? "on" : ""}" id="followBtn">${fav ? "✓ В избранном" : "+ В избранное"}</button></div></div><div style="height:24px"></div></div>
     <div class="section-gap"></div><div id="tcontent">${skel(8)}</div></div>`;
-  $("#followBtn").addEventListener("click", (e) => { const on = toggleFavTeam(team); e.target.classList.toggle("on", on); e.target.textContent = on ? "✓ Вы следите" : "+ Следить"; });
+  $("#followBtn").addEventListener("click", (e) => { const on = toggleFavTeam(team); e.target.classList.toggle("on", on); e.target.textContent = on ? "✓ В избранном" : "+ В избранное"; });
   const box = $("#tcontent");
   const ms = await run(sb.from("matches").select(M_SEL).or(`home_team_id.eq.${id},away_team_id.eq.${id}`).order("utc_date"));
   if (tab === "overview") return teamOverview(team, ms, comps, league, box);
@@ -618,18 +617,16 @@ async function teamOverview(team, ms, comps, league, box) {
   const pl = Object.values(agg).map((a) => ({ ...a, rating: a.rn ? a.rsum / a.rn : null }));
   const top = (k, lbl, d = 0, filt = () => true) => `<div class="card"><div class="card-h">${lbl}</div>${pl.filter(filt).sort((a, b) => b[k] - a[k]).slice(0, 3).map((r) => `<a class="lead" href="#/player/${r.player_id}">${avatar(r.player_id, r.name)}<div class="who"><div>${esc(r.name)}</div><small>${esc(posRu(r.position))}</small></div><span class="v">${k === "rating" ? ratingChip(r.rating) : num(r[k], d)}</span></a>`).join("")}<div style="height:8px"></div></div>`;
   const ts = league ? (await getTeamSeason(league.competition_id)).find((t) => t.team_id === id) : null;
-  box.innerHTML = `<div class="cols two"><main>
-    ${nx ? `<div class="card"><div class="card-h">Следующий матч<span class="more muted">${COMP[nx.competition_id]?.name}</span></div><a class="next-match" href="#/match/${nx.id}"><div class="t">${crest(nx.home, "crest md")}${esc(nx.home.name)}</div><div class="c"><b>${fmtTime(nx.utc_date)}</b>${fmtDay(nx.utc_date)}</div><div class="t">${crest(nx.away, "crest md")}${esc(nx.away.name)}</div></a></div>` : ""}
-    <div class="card"><div class="card-h">Сезон в цифрах</div><div class="card-b"><div class="tiles">
+  box.innerHTML = `<div class="leaders-grid">${top("goals", "Бомбардиры")}${top("assists", "Ассистенты")}${top("xg", "xG", 2)}${top("rating", "Рейтинг", 1, (r) => r.minutes >= 180)}</div><div class="section-gap"></div><div class="cols two flip"><main>
+    ${nx ? `<div class="card"><div class="card-h">Ближайшая игра<span class="more muted">${COMP[nx.competition_id]?.name}</span></div><a class="next-match" href="#/match/${nx.id}"><div class="t">${crest(nx.home, "crest md")}${esc(nx.home.name)}</div><div class="c"><b>${fmtTime(nx.utc_date)}</b>${fmtDay(nx.utc_date)}</div><div class="t">${crest(nx.away, "crest md")}${esc(nx.away.name)}</div></a></div>` : ""}
+    <div class="card"><div class="card-h">Цифры сезона</div><div class="card-b"><div class="tiles">
       ${league ? `<div class="tile"><div class="v">${league.position}</div><div class="k">Место · ${COMP[league.competition_id].short}</div></div><div class="tile"><div class="v">${league.points}</div><div class="k">Очки</div></div><div class="tile"><div class="v">${league.goals_for}:${league.goals_against}</div><div class="k">Мячи</div></div>` : ""}
       ${ts ? `<div class="tile"><div class="v">${num(ts.xg, 1)}</div><div class="k">xG</div></div><div class="tile"><div class="v">${num(ts.xga, 1)}</div><div class="k">xGA</div></div><div class="tile"><div class="v">${num(ts.possession, 0)}%</div><div class="k">Владение</div></div><div class="tile"><div class="v">${ts.clean_sheets}</div><div class="k">Сухие матчи</div></div>` : ""}
       <div class="tile"><div class="v" style="font-size:16px;padding:5px 0">${formHtml(form)}</div><div class="k">Форма</div></div>
     </div></div></div>
-    <div class="section-gap"></div>
-    <div class="leaders-grid">${top("goals", "Бомбардиры")}${top("assists", "Ассистенты")}${top("xg", "xG", 2)}${top("rating", "Рейтинг", 1, (r) => r.minutes >= 180)}</div>
   </main><aside class="side">
-    <div class="card"><div class="card-h">Последние матчи<a class="more" href="#/team/${id}/matches">Все</a></div>${fin.slice(-6).reverse().map((m) => matchRow(m, { showDate: true })).join("") || `<div class="empty-note">Нет сыгранных матчей.</div>`}<div style="height:8px"></div></div>
-    <div class="card"><div class="card-h">Предстоящие</div>${up.slice(0, 5).map((m) => matchRow(m, { showDate: true })).join("") || `<div class="empty-note">Нет запланированных матчей.</div>`}<div style="height:8px"></div></div>
+    <div class="card"><div class="card-h">Форма и результаты<a class="more" href="#/team/${id}/matches">Весь список</a></div>${fin.slice(-6).reverse().map((m) => matchRow(m, { showDate: true })).join("") || `<div class="empty-note">Нет сыгранных матчей.</div>`}<div style="height:8px"></div></div>
+    <div class="card"><div class="card-h">Календарь</div>${up.slice(0, 5).map((m) => matchRow(m, { showDate: true })).join("") || `<div class="empty-note">Нет запланированных матчей.</div>`}<div style="height:8px"></div></div>
   </aside></div>`;
 }
 async function teamSquad(id, box) {
@@ -673,7 +670,7 @@ async function viewPlayer(id) {
   const g = posGroup(p.position); setTC(p.team);
   app().innerHTML = `<div class="wrap">
     <div class="card"><div class="hero">${avatar(p.id, p.name, "avatar xl")}<div class="meta"><div class="eyebrow"><a class="link" href="#/team/${p.team?.id}">${esc(p.team?.name || "")}</a> · ${esc(p.position || POS_RU[g])}${p.raw?.jersey ? " · №" + esc(p.raw.jersey) : ""}</div><h1 class="title">${esc(p.name)}</h1></div>
-      <div class="hero-actions"><a class="btn" href="#/compare?a=${p.id}">Сравнить</a></div></div>
+      <div class="hero-actions"><a class="btn" href="#/compare?a=${p.id}">Сравнить с игроком</a></div></div>
       <div class="card-b" style="padding-top:22px"><div class="tiles">
         <div class="tile"><div class="v">${tot.apps || 0}</div><div class="k">Матчи (${tot.starts || 0} в старте)</div></div><div class="tile"><div class="v">${tot.minutes || 0}</div><div class="k">Минуты</div></div>
         <div class="tile"><div class="v">${tot.goals || 0}</div><div class="k">Голы</div></div><div class="tile"><div class="v">${tot.assists || 0}</div><div class="k">Ассисты</div></div>
@@ -682,7 +679,7 @@ async function viewPlayer(id) {
         <div class="tile"><div class="v">${tot.rn ? num(tot.rs / tot.rn, 2) : "–"}</div><div class="k">Средний рейтинг</div></div><div class="tile"><div class="v">${num(p90(tot.goals || 0, tot.minutes || 0), 2)}</div><div class="k">Голы /90</div></div><div class="tile"><div class="v">${num((tot.xg || 0) + (tot.xa || 0), 2)}</div><div class="k">xG+xA</div></div><div class="tile"><div class="v">${tot.shots ? Math.round(tot.shots_on_target / tot.shots * 100) + "%" : "–"}</div><div class="k">Точность ударов</div></div><div class="tile"><div class="v">${tot.yellow || 0}/${tot.red || 0}</div><div class="k">Жёлтые / красные</div></div>
       </div></div></div>
     <div class="section-gap"></div>
-    <div class="grid2"><div class="card" id="pctCard"><div class="card-h">Перцентили</div>${skel(6)}</div>
+    <div class="grid2"><div class="card" id="pctCard"><div class="card-h">Сильные стороны</div>${skel(6)}</div>
       <div class="card"><div class="card-h">Карта ударов<span class="more muted">${shots.length} ударов · xG ${num(shots.reduce((s, x) => s + (+x.raw?.xg || 0), 0), 2)}</span></div><div class="pitch-wrap">${shots.length ? halfPitchShots(shots) : `<div class="empty-note">Нет ударов с координатами.</div>`}</div></div></div>
     <div class="section-gap"></div>
     <div class="card"><div class="card-h">По турнирам</div><div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">Турнир</th><th class="l">Команда</th><th>И</th><th>Мин</th><th>Г</th><th>А</th><th>xG</th><th>xA</th><th>Удары</th><th>ЖК</th><th>Рейтинг</th></tr></thead><tbody>
@@ -793,7 +790,7 @@ async function viewMatch(id, tab) {
   const goals = evs.filter((e) => ["goal", "penalty_goal", "own_goal"].includes(e.type));
   const scorerList = (tid) => goals.filter((g) => (g.type === "own_goal" ? g.team_id !== tid : g.team_id === tid)).map((g) => `${esc(g.raw?.names?.[0] || "")} ${g.raw?.clock || g.minute + "'"}${g.type === "penalty_goal" ? " (пен.)" : g.type === "own_goal" ? " (авто)" : ""}`).join("<br>");
   // own goal team_id in ESPN is the scoring player's team (conceding side) — handle both
-  const tabs = [["facts", "Детали"], ["lineups", "Составы"], ["stats", "Статистика"], ["comm", "Комментарии"], ["table", "Таблица"], ["h2h", "Матчи"]];
+  const tabs = [["facts", "Обзор"], ["lineups", "Составы"], ["stats", "Цифры"], ["comm", "Хроника"], ["table", "Таблица"], ["h2h", "Очные"]];
   const H = ts.find((t) => t.team_id === m.home_team_id), A = ts.find((t) => t.team_id === m.away_team_id);
   app().innerHTML = `<div class="wrap">
     <div class="card"><div class="mh">
@@ -845,7 +842,7 @@ function matchFacts({ m, evs, H, A, pms }, box) {
   }
   const best = [...pms].filter((p) => p.rating).sort((a, b) => b.rating - a.rating)[0];
   const hs = H?.raw?.s || {}, as = A?.raw?.s || {};
-  box.innerHTML = `<div class="cols two"><main>${momentum(m, evs)}<div class="card"><div class="card-h">События матча</div><div class="card-b"><div class="tl">${tl || `<div class="empty-note">Событий пока нет.</div>`}</div></div></div>
+  box.innerHTML = `<div class="cols two flip"><main>${momentum(m, evs)}<div class="card"><div class="card-h">Ход матча</div><div class="card-b"><div class="tl">${tl || `<div class="empty-note">Событий пока нет.</div>`}</div></div></div>
     <div class="section-gap"></div><div class="card"><div class="card-h">xG по ходу матча</div><div class="chart-box sm"><canvas id="xgRace"></canvas></div></div></main>
     <aside class="side">
       ${best ? `<div class="card"><div class="card-h">Игрок матча</div><a class="lead" href="#/player/${best.player_id}" style="padding-bottom:16px">${avatar(best.player_id, best.player?.name)}<div class="who"><div><b>${esc(best.player?.name)}</b></div><small>${best.goals ? best.goals + " г · " : ""}${best.assists ? best.assists + " а · " : ""}${best.minutes}'</small></div>${ratingChip(best.rating)}</a></div>` : ""}
@@ -1016,8 +1013,8 @@ async function matchH2H({ m }, box) {
 /* ================= STATS (all leagues) ================= */
 async function viewStats(c, sKey) {
   const comp = c === "ALL" ? null : c;
-  app().innerHTML = `<div class="wrap"><div class="card"><div class="hero"><div class="meta"><h1 class="title">Статистика</h1></div></div>
-    <div class="feed-tools" style="padding:20px 28px 22px"><div class="pills" id="cpills"><a class="pill ${!comp ? "on" : ""}" href="#/stats"><svg class="pl-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>Все турниры</a>${COMPS.map((x) => `<a class="pill ${comp === x.id ? "on" : ""}" href="#/stats?c=${x.id}"><img class="pl-logo" src="${x.logo}" alt="" onerror="this.remove()">${x.short}</a>`).join("")}</div></div></div>
+  app().innerHTML = `<div class="wrap"><div class="card"><div class="hero"><div class="meta"><h1 class="title">Цифры сезона</h1></div></div>
+    <div class="feed-tools" style="padding:20px 28px 22px"><div class="pills" id="cpills"><a class="pill ${!comp ? "on" : ""}" href="#/stats"><svg class="pl-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>Все лиги</a>${COMPS.map((x) => `<a class="pill ${comp === x.id ? "on" : ""}" href="#/stats?c=${x.id}"><img class="pl-logo" src="${x.logo}" alt="" onerror="this.remove()">${x.short}</a>`).join("")}</div></div></div>
     <div class="section-gap"></div><div id="sbody">${skel(10)}</div></div>`;
   { const cp = $("#cpills"), on = cp && cp.querySelector(".pill.on"); if (on) cp.scrollLeft = Math.max(0, on.offsetLeft - (cp.clientWidth - on.offsetWidth) / 2); }
   const ps = await getPlayerSeason(comp);
