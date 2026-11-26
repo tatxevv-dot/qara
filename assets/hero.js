@@ -54,7 +54,7 @@
 
   function footballBanner(it) {
     const m = it.m, c = comp(m.competition_id), k = skin(m.competition_id);
-    const lg = c.logo ? `<img class="hr-lg ${k.logo}" src="${esc(c.logo)}" alt="">` : "";
+    const lg = c.logo ? `<img class="hr-lg ${k.logo}" src="${esc(m.competition_id === "BL1" ? "assets/logos/bl-w.svg" : c.logo)}" alt="">` : "";
     return `<a class="hr-item" href="#/match/${esc(m.id)}"><div class="hr-card k-${esc(m.competition_id)}"${k.line ? ` style="--ln:${k.line}"` : ""}>${lg}<i class="hr-ln"></i><span class="hr-tm l">${crest(m.home, "")}</span><span class="hr-tm r">${crest(m.away, "")}</span></div>${caption(it.live, nm(m.home) + " — " + nm(m.away), (it.live ? "" : dayLbl(it.date) + " · ") + c.short)}</a>`;
   }
   function mmaBanner(it) {
