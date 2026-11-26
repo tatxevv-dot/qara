@@ -438,3 +438,43 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);
 .wrap.lg .lg-sub .lg-row{background:var(--bg-elev)}
 /* menu panel: active section */
 .st-row.on{background:var(--accent-soft);color:var(--accent);font-weight:700}
+
+/* ===== v10: calm pass — no hover zoom, no green hover glow, flat tables, far fewer shadows ===== */
+/* 1. no zoom / lift / slide on hover or press */
+.mrow:hover,.card:hover,.tile:hover,.tiles .tile:hover,.pm:hover,.qchips a:hover,.sx-card:hover,.sx-t:hover,.lg-row:hover,
+.mm-fight:hover,.mm-ev:hover,.mm-row:hover,.hr-card:hover,.scard:hover,.btn:hover,.mm-hero-btn:hover,.nav-list a:hover,.lead:hover,
+.wrap.sx .sx-card:hover,.wrap.sx .sx-t:hover,.wrap.lg .lg-row:hover,.mrow:active,.tile:active,.btn:active,.fav:active,.fx:active{transform:none!important}
+/* 2. no green glow behind matches / cards / lists on hover or tap */
+.mrow:not(.live):hover{background:var(--bg-sunk)!important;border-color:var(--line-2)!important}
+.mrow.live:hover{border-color:rgba(255,90,79,.45)!important}
+.card:hover,.tile:hover,.pm:hover,.qchips a:hover,.sx-card:hover,.sx-t:hover,.lg-row:hover,.mm-fight:hover,.mm-ev:hover,.mm-row:hover,.hr-card:hover,.scard:hover{border-color:var(--line-2)!important}
+.pm:hover{background:transparent!important}
+.qchips a:hover{background:var(--bg-elev)!important}
+.wrap.lg .lg-row:hover{background:var(--bg-sunk)!important}
+.fx:hover,.sr-item:hover,.tl-row:hover,.nav-list a:hover,.lead:hover,.tbl tbody tr:hover{background:transparent!important}
+.nav-list a:hover,.lead:hover{color:inherit}
+.btn:hover,.mm-hero-btn:hover{box-shadow:none!important}
+.mm-prof,.mrow,.card{-webkit-tap-highlight-color:transparent}
+/* 3. flat tables */
+.card{background:var(--bg-elev)}
+.tbl-wrap{background:var(--bg-elev)}
+.tbl th,.tbl td,.tbl tbody tr{background:transparent}
+.tbl td.pos,.tbl th.pos,.tbl .sticky,.tbl td:first-child,.tbl th:first-child{background:var(--bg-elev)}
+.tbl tbody tr{border-bottom:1px solid var(--line-2)}
+.tbl tbody tr:last-child{border-bottom:0}
+.tbl tbody tr:first-child .pos{color:var(--text-2)}
+.tbl .pos i{width:3px!important;top:10px!important;bottom:10px!important;border-radius:0 3px 3px 0!important;box-shadow:none!important;opacity:.9}
+.tbl .pts{font-weight:700}
+/* 4. far fewer shadows */
+.card,.mrow,.tile,.pm,.mh,.hero,.qchips a,.sx-card,.sx-t,.lg-row,.lg-grp,.lg-link img,.lg-gh img,.mm-fight,.mm-ev,.mm-row,.mm-hero,.mm-prof,
+.btn,.mm-hero-btn,.date.on,.seg .on,.seg .active,.tabbar,.localnav,.tbl-wrap,.chart-box,.hr-card,.scard,.lu-pitch,.pitch-wrap,.mm-av,
+.wrap.sx .sx-card,.wrap.sx .sx-t,.wrap.sx .sx-badge,.wrap.lg .lg-row,.wrap.lg .lg-link img,.wrap.lg .lg-gh img,.flyout,.toast,.mm-seg a.on,.mm-tabs .on,
+.datebar .arrow,.icon-btn,.seg,.mrow.live{box-shadow:none!important}
+.crest,.hero .crest.lg,.hero img.lg,.mm-belt,.tl-ic{filter:none!important}
+.card-h::before{box-shadow:none}
+.wrap.lg .lg-h h2::before,.wrap.sx .sx-h h2::before{box-shadow:none}
+.mrow.live{border-color:rgba(255,90,79,.45);background:var(--bg-sunk)}
+.gnav,.gnav.scrolled{box-shadow:0 6px 20px -14px rgba(0,0,0,.35)!important}
+.tabbar{box-shadow:0 -4px 20px -14px rgba(0,0,0,.35)!important}
+.hero,.mh,.mm-hero,.qm{background-image:none}
+html[data-theme="dark"] .hero,html[data-theme="dark"] .mh{background:var(--bg-elev)}
