@@ -192,6 +192,14 @@ const posRu = (p) => POS_RU[posGroup(p)];
 /* ---------------- router ---------------- */
 let refreshTimer = null, charts = [];
 function killCharts() { charts.forEach((c) => c.destroy()); charts = []; }
+try { history.scrollRestoration = "manual"; } catch (e) {}
+function scrollTop0() { window.scrollTo({ top: 0, left: 0, behavior: "instant" }); }
+/* прокрутить так, чтобы начало раздела оказалось сразу под липкой шапкой раздела; если мы выше — не трогаем */
+function alignSection(el) {
+  if (!el) return;
+  const nav = document.querySelector("#app .localnav"), off = nav ? nav.getBoundingClientRect().bottom : 0, d = el.getBoundingClientRect().top - off;
+  if (d < 0) window.scrollTo({ top: window.scrollY + d, behavior: "instant" });
+}
 async function route() {
   /* переключение вкладки внутри того же матча: страница и плеер не перерисовываются, меняется только содержимое вкладки */
   const mm = location.hash.match(/^#\/match\/([^/?]+)\/?([^/?]*)/), cm = document.getElementById("mcontent");
@@ -201,6 +209,7 @@ async function route() {
     cm.style.transition = "opacity .15s"; cm.style.opacity = ".5";
     try { await softMatch(decodeURIComponent(mm[1]), tab, true); } catch (e) { console.warn("[tab]", e); }
     cm.style.opacity = "";
+    alignSection(cm);
     const on = document.querySelector("#app .localnav .tabs a.on");
     if (on && (on.getAttribute("href") || "").endsWith("/" + tab)) { const pl = document.getElementById("polls"); if (pl && tab !== "facts") pl.innerHTML = ""; return; }
   }
@@ -209,7 +218,8 @@ async function route() {
   const parts = path.split("/").filter(Boolean);
   const params = new URLSearchParams(qs || "");
   $$(".gnav-links a").forEach((a) => a.classList.toggle("active", a.dataset.r === (parts[0] || "home") || (parts[0] === "league" && ((a.dataset.r === "cl" && parts[1] === "CL") || (a.dataset.r === "nl" && parts[1] === "NL")))));
-  { const homeNow = !parts.length, base = parts[0] + "/" + parts[1], keep = (homeNow && window.__wasHome) || (!homeNow && window.__lastBase === base); window.__wasHome = homeNow; window.__lastBase = homeNow ? "" : base; if (!keep) window.scrollTo({ top: 0 }); }
+  let keepScroll = false, homeNow = !parts.length;
+  { const base = parts[0] + "/" + parts[1]; keepScroll = (homeNow && window.__wasHome) || (!homeNow && window.__lastBase === base); window.__wasHome = homeNow; window.__lastBase = homeNow ? "" : base; if (!keepScroll) scrollTop0(); }
   try {
     if (!parts.length) await viewHome(params);
     else if (parts[0] === "league") await viewLeague(parts[1], parts[2] || "overview", params);
@@ -225,6 +235,9 @@ async function route() {
     console.error(e);
     app().innerHTML = `<div class="wrap"><div class="card"><div class="empty-note">Не удалось загрузить данные. ${esc(e.message || e)}</div></div></div>`;
   }
+  /* новая страница — всегда с начала; смена раздела на той же странице — с начала раздела; смена дня на главной — остаёмся на месте */
+  if (!keepScroll) scrollTop0();
+  else if (!homeNow) alignSection(document.querySelector("#app .localnav")?.nextElementSibling);
 }
 window.addEventListener("hashchange", route);
 const skel = (n = 6) => Array.from({ length: n }, () => `<div class="sk sk-row"></div>`).join("");
