@@ -19,8 +19,8 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"qara.","alternateName":["qara","Qara"],"url":"https://tatxevv-dot.github.io/qara/","inLanguage":"ru"}</script>
 <meta name="robots" content="index,follow">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f5f5f5" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a0f0d" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="favicon.ico?v=2" sizes="48x48">
 <link rel="icon" href="assets/favicon.svg?v=2" type="image/svg+xml" sizes="any">
 <link rel="icon" href="assets/icon-192.png?v=2" type="image/png" sizes="192x192">
@@ -33,6 +33,7 @@
 <link rel="stylesheet" href="assets/zone.min.css?v=12">
 <link rel="stylesheet" href="assets/stats.css?v=23">
 <link rel="stylesheet" href="assets/mma.css?v=5">
+<link rel="stylesheet" href="assets/qara-ui.css?v=8">
 <style>.logo{display:inline-flex;align-items:center}.logo-img{height:26px;width:auto;display:block}.logo-img-d{display:none}html[data-theme="dark"] .logo-img-l{display:none}html[data-theme="dark"] .logo-img-d{display:block}</style>
 <script>
 try{var t=JSON.parse(localStorage.getItem("zone.theme"));if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}
@@ -48,9 +49,9 @@ addEventListener("hashchange",function(){window.__zn=Date.now()});
   <div class="gnav-in">
     <a class="logo" href="#/" aria-label="qara — главная"><img class="logo-img logo-img-l" src="assets/logo.png?v=2" alt="qara" height="26"><img class="logo-img logo-img-d" src="assets/logo-white.png?v=2" alt="qara" height="26"></a>
     <nav class="gnav-links" aria-label="Основное меню">
-      <a href="#/" data-r="home">Матчи</a>
-      <button id="leaguesBtn" type="button">Лиги</button>
-      <a href="#/stats" data-r="stats">Статистика</a>
+      <a href="#/" data-r="home">Сегодня</a>
+      <button id="leaguesBtn" type="button">Турниры</button>
+      <a href="#/stats" data-r="stats">Цифры</a>
     </nav>
     <div class="gnav-icons">
       <button class="icon-btn" id="searchBtn" type="button" aria-label="Поиск" title="Поиск ( / )"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
@@ -85,7 +86,7 @@ addEventListener("hashchange",function(){window.__zn=Date.now()});
 <main id="app" tabindex="-1"></main>
 
 <footer class="foot">
-  <div class="foot-in"><div>С любовью команда «<strong>Qara<span style="color: #00a859;">.</span></strong>»</div></div>
+  <div class="foot-in"><div><strong>qara<span style="color:var(--accent)">.</span></strong> · мы там, где футбол</div></div>
 </footer>
 
 <nav class="tabbar" aria-label="Навигация">
@@ -99,7 +100,7 @@ addEventListener("hashchange",function(){window.__zn=Date.now()});
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="assets/app.js?v=42"></script>
+<script src="assets/app.js?v=45"></script>
 <script src="assets/auth.js?v=4"></script>
 <script src="assets/skin.js?v=17"></script>
 <script src="assets/ux.js?v=5"></script>
@@ -109,7 +110,7 @@ addEventListener("hashchange",function(){window.__zn=Date.now()});
 <script src="assets/redcards.js?v=6"></script>
 <script src="assets/streams.js?v=8"></script>
 <script src="assets/settings.js?v=4"></script>
-<script src="assets/mma.js?v=5"></script>
+<script src="assets/mma.js?v=7"></script>
 <script src="assets/hero.js?v=8"></script>
 </body>
 </html>
